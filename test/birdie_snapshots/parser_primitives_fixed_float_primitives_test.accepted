@@ -1,14 +1,14 @@
 ---
 version: 2.0.1
-title: lexer:primitives:implement not_a_number_float_primitives_test
+title: parser:primitives:fixed_float_primitives_test
 ---
 Input:
 
-.nan
+1230.15
 
 -----------------------------------------------------------------------
 
 ```gleam
-[PlainScalar(".nan")]
+Float(1230.15)
 
 ```

@@ -1,14 +1,14 @@
 ---
 version: 2.0.1
-title: lexer:primitives:implement false_lowercase_primitives_test
+title: lexer:primitives:exponential_float_primitives_test
 ---
 Input:
 
-false
+12.3015e+02
 
 -----------------------------------------------------------------------
 
 ```gleam
-[PlainScalar("false")]
+[PlainScalar("12.3015e+02")]
 
 ```

@@ -1,14 +1,14 @@
 ---
 version: 2.0.1
-title: primitives:implement negative_infinity_float_primitives_test
+title: parser:primitives:decimal_integer_primitives_test
 ---
 Input:
 
--.inf
++12345
 
 -----------------------------------------------------------------------
 
 ```gleam
-[PlainScalar("-.inf")]
+Int(12345)
 
 ```

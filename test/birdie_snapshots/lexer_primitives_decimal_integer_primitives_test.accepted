@@ -1,14 +1,14 @@
 ---
 version: 2.0.1
-title: primitives:implement true_lowercase_primitives_test
+title: lexer:primitives:decimal_integer_primitives_test
 ---
 Input:
 
-true
++12345
 
 -----------------------------------------------------------------------
 
 ```gleam
-[PlainScalar("true")]
+[PlainScalar("+12345")]
 
 ```

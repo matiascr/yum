@@ -1,14 +1,14 @@
 ---
 version: 2.0.1
-title: primitives:implement fixed_float_primitives_test
+title: parser:primitives:not_a_number_float_primitives_test
 ---
 Input:
 
-1230.15
+.nan
 
 -----------------------------------------------------------------------
 
 ```gleam
-[PlainScalar("1230.15")]
+Nan
 
 ```

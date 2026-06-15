@@ -1,14 +1,14 @@
 ---
 version: 2.0.1
-title: lexer:primitives:implement hexadecimal_integer_primitives_test
+title: parser:primitives:exponential_float_primitives_test
 ---
 Input:
 
-0xC
+12.3015e+02
 
 -----------------------------------------------------------------------
 
 ```gleam
-[PlainScalar("0xC")]
+Float(1230.15)
 
 ```

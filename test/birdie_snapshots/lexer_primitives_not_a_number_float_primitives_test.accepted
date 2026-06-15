@@ -1,14 +1,14 @@
 ---
 version: 2.0.1
-title: lexer:primitives:implement null_lowercase_primitives_test
+title: lexer:primitives:not_a_number_float_primitives_test
 ---
 Input:
 
-null
+.nan
 
 -----------------------------------------------------------------------
 
 ```gleam
-[PlainScalar("null")]
+[PlainScalar(".nan")]
 
 ```

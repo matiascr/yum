@@ -1,6 +1,6 @@
 ---
 version: 2.0.1
-title: primitives:implement octal_integer_primitives_test
+title: parser:primitives:octal_integer_primitives_test
 ---
 Input:
 
@@ -9,6 +9,6 @@ Input:
 -----------------------------------------------------------------------
 
 ```gleam
-[PlainScalar("0o14")]
+Int(12)
 
 ```

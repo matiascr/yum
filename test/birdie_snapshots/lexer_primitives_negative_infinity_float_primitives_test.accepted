@@ -1,14 +1,14 @@
 ---
 version: 2.0.1
-title: lexer:primitives:implement true_lowercase_primitives_test
+title: lexer:primitives:negative_infinity_float_primitives_test
 ---
 Input:
 
-true
+-.inf
 
 -----------------------------------------------------------------------
 
 ```gleam
-[PlainScalar("true")]
+[PlainScalar("-.inf")]
 
 ```

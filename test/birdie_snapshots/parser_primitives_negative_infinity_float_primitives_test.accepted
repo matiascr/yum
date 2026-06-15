@@ -1,14 +1,14 @@
 ---
 version: 2.0.1
-title: primitives:implement false_lowercase_primitives_test
+title: parser:primitives:negative_infinity_float_primitives_test
 ---
 Input:
 
-false
+-.inf
 
 -----------------------------------------------------------------------
 
 ```gleam
-[PlainScalar("false")]
+NegInf
 
 ```

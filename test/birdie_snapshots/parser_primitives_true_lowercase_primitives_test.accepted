@@ -1,14 +1,14 @@
 ---
 version: 2.0.1
-title: lexer:primitives:implement canonical_float_primitives_test
+title: parser:primitives:true_lowercase_primitives_test
 ---
 Input:
 
-1.23015e+3
+true
 
 -----------------------------------------------------------------------
 
 ```gleam
-[PlainScalar("1.23015e+3")]
+Bool(True)
 
 ```

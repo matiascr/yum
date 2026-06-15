@@ -1,14 +1,14 @@
 ---
 version: 2.0.1
-title: primitives:implement decimal_integer_primitives_test
+title: lexer:primitives:canonical_float_primitives_test
 ---
 Input:
 
-+12345
+1.23015e+3
 
 -----------------------------------------------------------------------
 
 ```gleam
-[PlainScalar("+12345")]
+[PlainScalar("1.23015e+3")]
 
 ```

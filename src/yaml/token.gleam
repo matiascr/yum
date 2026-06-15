@@ -60,7 +60,7 @@ pub type Token {
 
   Indentation(Int)
 
-  DoubleQuotedScalar(String)
-  SingleQuotedScalar(String)
-  PlainScalar(String)
+  DoubleQuotedScalar(value: String)
+  SingleQuotedScalar(value: String)
+  PlainScalar(value: String)
 }

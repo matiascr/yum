@@ -1,14 +1,14 @@
 ---
 version: 2.0.1
-title: primitives:implement exponential_float_primitives_test
+title: parser:primitives:canonical_float_primitives_test
 ---
 Input:
 
-12.3015e+02
+1.23015e+3
 
 -----------------------------------------------------------------------
 
 ```gleam
-[PlainScalar("12.3015e+02")]
+Float(1230.15)
 
 ```

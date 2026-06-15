@@ -1,14 +1,14 @@
 ---
 version: 2.0.1
-title: primitives:implement hexadecimal_integer_primitives_test
+title: lexer:primitives:false_lowercase_primitives_test
 ---
 Input:
 
-0xC
+false
 
 -----------------------------------------------------------------------
 
 ```gleam
-[PlainScalar("0xC")]
+[PlainScalar("false")]
 
 ```
