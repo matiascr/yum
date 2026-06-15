@@ -1,7 +1,49 @@
-import nibble/lexer
+import gleam/result
+import nibble/lexer.{type Lexer}
 import yaml/error.{type YamlError}
+import yaml/lexer/context.{type Context}
+import yaml/lexer/double_quoted_scalar
+import yaml/lexer/flow_mapping
+import yaml/lexer/flow_sequence
+import yaml/lexer/indentation
+import yaml/lexer/plain_scalar
+import yaml/lexer/single_quoted_scalar
 import yaml/token.{type Token}
 
 pub fn lex(input: String) -> Result(List(lexer.Token(Token)), YamlError) {
-  todo
+  let initial_context: Context = context.FlowStyle(prev: context.BlockStyle(0))
+
+  input
+  |> lexer.run_advanced(initial_context, lexer())
+  |> result.map_error(error.from_lex_error)
+}
+
+fn lexer() -> Lexer(Token, Context) {
+  lexer.advanced(fn(ctx) {
+    case ctx {
+      context.BlockStyle(_) -> [
+        indentation.lexer(),
+      ]
+
+      context.FlowStyle(prev: _) -> [
+        plain_scalar.lexer(),
+      ]
+
+      context.FlowMapping(_) -> [
+        flow_mapping.lexer(),
+      ]
+
+      context.FlowSequence(_) -> [
+        flow_sequence.lexer(),
+      ]
+
+      context.DoubleQuotedScalar(_) -> [
+        double_quoted_scalar.lexer(),
+      ]
+
+      context.SingleQuotedScalar(_) -> [
+        single_quoted_scalar.lexer(),
+      ]
+    }
+  })
 }

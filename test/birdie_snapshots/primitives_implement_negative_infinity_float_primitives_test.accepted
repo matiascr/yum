@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: primitives:implement negative_infinity_float_primitives_test
+---
+Input:
+
+-.inf
+
+-----------------------------------------------------------------------
+
+```gleam
+[PlainScalar("-.inf")]
+
+```

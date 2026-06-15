@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: primitives:implement not_a_number_float_primitives_test
+---
+Input:
+
+.nan
+
+-----------------------------------------------------------------------
+
+```gleam
+[PlainScalar(".nan")]
+
+```

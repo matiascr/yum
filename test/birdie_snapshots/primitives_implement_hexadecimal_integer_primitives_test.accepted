@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: primitives:implement hexadecimal_integer_primitives_test
+---
+Input:
+
+0xC
+
+-----------------------------------------------------------------------
+
+```gleam
+[PlainScalar("0xC")]
+
+```

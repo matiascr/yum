@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: primitives:implement true_lowercase_primitives_test
+---
+Input:
+
+true
+
+-----------------------------------------------------------------------
+
+```gleam
+[PlainScalar("true")]
+
+```

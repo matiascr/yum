@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: primitives:implement octal_integer_primitives_test
+---
+Input:
+
+0o14
+
+-----------------------------------------------------------------------
+
+```gleam
+[PlainScalar("0o14")]
+
+```

@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: primitives:implement null_lowercase_primitives_test
+---
+Input:
+
+null
+
+-----------------------------------------------------------------------
+
+```gleam
+[PlainScalar("null")]
+
+```

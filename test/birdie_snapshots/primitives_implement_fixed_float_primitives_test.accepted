@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: primitives:implement fixed_float_primitives_test
+---
+Input:
+
+1230.15
+
+-----------------------------------------------------------------------
+
+```gleam
+[PlainScalar("1230.15")]
+
+```

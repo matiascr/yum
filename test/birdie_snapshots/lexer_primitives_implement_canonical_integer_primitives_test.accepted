@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: lexer:primitives:implement canonical_integer_primitives_test
+---
+Input:
+
+12345
+
+-----------------------------------------------------------------------
+
+```gleam
+[PlainScalar("12345")]
+
+```
