@@ -1,0 +1,18 @@
+---
+version: 2.0.1
+title: spec:example_7_5_double_quoted_line_breaks_test
+---
+Input:
+
+"folded 
+to a space,	
+ 
+to a line feed, or 	\
+ \ 	non-content"
+
+-----------------------------------------------------------------------
+
+```gleam
+String("folded \nto a space,  \n \nto a line feed, or   \n\n     non-content")
+
+```

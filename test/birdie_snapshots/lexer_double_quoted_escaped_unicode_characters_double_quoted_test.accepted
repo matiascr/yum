@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: lexer:double_quoted:escaped_unicode_characters_double_quoted_test
+---
+Input:
+
+"\"\\  \\_ \\N \\L \\P \\x41 \\u0042 \\U00000043\""
+
+-----------------------------------------------------------------------
+
+```gleam
+[DoubleQuote, Escape(" "), DoubleQuotedScalar(" "), Escape("_"), DoubleQuotedScalar(" "), Escape("N"), DoubleQuotedScalar(" "), Escape("L"), DoubleQuotedScalar(" "), Escape("P"), DoubleQuotedScalar(" "), Escape("x41"), DoubleQuotedScalar(" "), Escape("u0042"), DoubleQuotedScalar(" "), Escape("U00000043"), DoubleQuote]
+
+```

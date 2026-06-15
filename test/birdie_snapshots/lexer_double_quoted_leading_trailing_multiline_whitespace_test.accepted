@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: lexer:double_quoted:leading_trailing_multiline_whitespace_test
+---
+Input:
+
+"\"  first\n second \n\""
+
+-----------------------------------------------------------------------
+
+```gleam
+[DoubleQuote, DoubleQuotedScalar("  first\n second \n"), DoubleQuote]
+
+```

@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: parser:double_quoted:escaped_quotes_and_slashes_double_quoted_test
+---
+Input:
+
+"\"\\\" \\/ \\\\\""
+
+-----------------------------------------------------------------------
+
+```gleam
+String("\" / \\")
+
+```

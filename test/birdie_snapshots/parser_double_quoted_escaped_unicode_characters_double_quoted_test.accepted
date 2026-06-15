@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: parser:double_quoted:escaped_unicode_characters_double_quoted_test
+---
+Input:
+
+"\"\\  \\_ \\N \\L \\P \\x41 \\u0042 \\U00000043\""
+
+-----------------------------------------------------------------------
+
+```gleam
+String("    \u{0085}     A B C")
+
+```

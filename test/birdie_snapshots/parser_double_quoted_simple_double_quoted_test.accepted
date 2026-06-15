@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: parser:double_quoted:simple_double_quoted_test
+---
+Input:
+
+"\"hello world\""
+
+-----------------------------------------------------------------------
+
+```gleam
+String("hello world")
+
+```

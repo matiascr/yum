@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: lexer:double_quoted:escaped_control_characters_double_quoted_test
+---
+Input:
+
+"\"\\0 \\a \\b \\t \\n \\v \\f \\r \\e\""
+
+-----------------------------------------------------------------------
+
+```gleam
+[DoubleQuote, Escape("0"), DoubleQuotedScalar(" "), Escape("a"), DoubleQuotedScalar(" "), Escape("b"), DoubleQuotedScalar(" "), Escape("t"), DoubleQuotedScalar(" "), Escape("n"), DoubleQuotedScalar(" "), Escape("v"), DoubleQuotedScalar(" "), Escape("f"), DoubleQuotedScalar(" "), Escape("r"), DoubleQuotedScalar(" "), Escape("e"), DoubleQuote]
+
+```

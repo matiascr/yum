@@ -6,4 +6,5 @@ pub type Context {
   FlowSequence(prev: Context)
   DoubleQuotedScalar(prev: Context)
   SingleQuotedScalar(prev: Context)
+  DoubleQuotedEscape(prev: Context)
 }

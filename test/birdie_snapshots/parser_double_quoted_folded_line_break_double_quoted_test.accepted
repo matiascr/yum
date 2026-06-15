@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: parser:double_quoted:folded_line_break_double_quoted_test
+---
+Input:
+
+"\"folded \nto a space\""
+
+-----------------------------------------------------------------------
+
+```gleam
+String("folded to a space")
+
+```

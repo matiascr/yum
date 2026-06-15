@@ -25,24 +25,14 @@ fn lexer() -> Lexer(Token, Context) {
         indentation.lexer(),
       ]
 
-      context.FlowStyle(prev: _) -> [
-        plain_scalar.lexer(),
-      ]
-
-      context.FlowMapping(_) -> [
-        flow_mapping.lexer(),
-      ]
-
-      context.FlowSequence(_) -> [
-        flow_sequence.lexer(),
-      ]
-
-      context.DoubleQuotedScalar(_) -> [
-        double_quoted_scalar.lexer(),
-      ]
-
-      context.SingleQuotedScalar(_) -> [
-        single_quoted_scalar.lexer(),
+      // Flow Style Productions
+      context.FlowStyle(prev: _) -> [plain_scalar.lexer()]
+      context.FlowMapping(prev: _) -> [flow_mapping.lexer()]
+      context.FlowSequence(prev: _) -> [flow_sequence.lexer()]
+      context.DoubleQuotedScalar(prev: _) -> [double_quoted_scalar.lexer()]
+      context.SingleQuotedScalar(prev: _) -> [single_quoted_scalar.lexer()]
+      context.DoubleQuotedEscape(prev: _) -> [
+        double_quoted_scalar.escape_lexer(),
       ]
     }
   })

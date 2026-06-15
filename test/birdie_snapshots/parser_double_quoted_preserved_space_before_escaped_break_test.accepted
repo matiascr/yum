@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: parser:double_quoted:preserved_space_before_escaped_break_test
+---
+Input:
+
+"\"keep  \\\n  next\""
+
+-----------------------------------------------------------------------
+
+```gleam
+String("keep  next")
+
+```

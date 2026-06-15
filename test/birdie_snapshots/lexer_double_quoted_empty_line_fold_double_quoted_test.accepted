@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: lexer:double_quoted:empty_line_fold_double_quoted_test
+---
+Input:
+
+"\"folded\n\nas a line feed\""
+
+-----------------------------------------------------------------------
+
+```gleam
+[DoubleQuote, DoubleQuotedScalar("folded\n\nas a line feed"), DoubleQuote]
+
+```

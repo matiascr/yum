@@ -1,3 +1,4 @@
+import gleam/bool
 import gleam/int
 import gleam/list
 import gleam/result
@@ -12,7 +13,7 @@ import yaml/parser
 /// Follows the [YAML 1.2 specification](https://yaml.org/spec/1.2.2/)
 ///
 pub fn parse(input: String) -> Result(Yaml, YamlError) {
-  use input <- result.try(normalize_whitespace(input, 2))
+  use input <- result.try(normalize_whitespace(input, 0))
   use input <- result.try(normalize_indents(input))
 
   use tokens <- result.try(lexer.lex(input))
@@ -28,6 +29,7 @@ fn normalize_whitespace(
   input: String,
   tab_equivalent: Int,
 ) -> Result(String, YamlError) {
+  use <- bool.guard(when: tab_equivalent == 0, return: Ok(input))
   input
   |> string.replace(each: "\t", with: string.repeat(" ", tab_equivalent))
   |> Ok

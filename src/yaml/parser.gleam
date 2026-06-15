@@ -9,6 +9,7 @@ import nibble/lexer
 import yaml.{type Yaml}
 import yaml/error.{type YamlError}
 import yaml/lexer/context.{type Context}
+import yaml/parser/double_quoted
 import yaml/token.{type Token}
 
 pub fn parse(tokens: List(lexer.Token(Token))) -> Result(Yaml, YamlError) {
@@ -24,15 +25,14 @@ fn parser() -> Parser(Yaml, Token, Context) {
 fn default_parser() -> Parser(Yaml, Token, Context) {
   nibble.one_of([
     value_parser(),
+    double_quoted.parser(),
   ])
 }
 
 fn value_parser() -> Parser(Yaml, Token, Context) {
   use tok <- nibble.take_map("Expected a value")
   case tok {
-    token.DoubleQuotedScalar(value:)
-    | token.SingleQuotedScalar(value:)
-    | token.PlainScalar(value:) -> {
+    token.SingleQuotedScalar(value:) | token.PlainScalar(value:) -> {
       parse_scalar(value)
     }
 
@@ -56,7 +56,10 @@ fn value_parser() -> Parser(Yaml, Token, Context) {
     | token.At
     | token.GraveAccent
     | token.LineBreak
-    | token.Indentation(_) -> None
+    | token.Indentation(_)
+    | token.DoubleQuotedScalar(_)
+    | token.Escape(_)
+    | token.InvalidEscape -> None
   }
 }
 
@@ -215,7 +218,7 @@ fn parse_inf(input: String) -> Option(Yaml) {
   }
 }
 
-const nan_regex = "[-+]?(\\.nan|\\.nan|\\.nan)"
+const nan_regex = "\\.nan|\\.NaN|\\.NAN"
 
 fn parse_nan(input: String) -> Option(Yaml) {
   let assert Ok(regex) = regexp.compile(nan_regex, regex_options)
