@@ -1,1 +1,3 @@
-pub type YamlError
+pub type YamlError {
+  IndentNormalizationError
+}
