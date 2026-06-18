@@ -62,6 +62,7 @@ pub type Token {
 
   DoubleQuotedScalar(value: String)
   SingleQuotedScalar(value: String)
+  MappingKey(value: String)
   PlainScalar(value: String)
   Escape(value: String)
   InvalidEscape

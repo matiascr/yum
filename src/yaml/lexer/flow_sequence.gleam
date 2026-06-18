@@ -12,11 +12,23 @@ pub fn lexer() -> Matcher(Token, Context) {
 
     "]", _ -> token.CloseSequence |> lexer.Keep(prev)
     ",", _ -> token.Comma |> lexer.Keep(ctx)
+    ":", _ -> token.Colon |> lexer.Keep(ctx)
+    "?", _ -> token.QuestionMark |> lexer.Keep(ctx)
     "[", _ -> token.OpenSequence |> lexer.Keep(context.FlowSequence(ctx))
     "{", _ -> token.OpenMapping |> lexer.Keep(context.FlowMapping(ctx))
     "\"", _ -> token.DoubleQuote |> lexer.Keep(context.DoubleQuotedScalar(ctx))
     "'", _ -> token.SingleQuote |> lexer.Keep(context.SingleQuotedScalar(ctx))
 
+    _, ":" ->
+      case ends_with_whitespace(lexeme) {
+        True -> keep_plain_scalar(lexeme, ctx)
+        False -> lexer.Skip
+      }
+    _, " " | _, "\t" | _, "\r" | _, "\n" ->
+      case string.ends_with(lexeme, ":") {
+        True -> keep_plain_scalar(lexeme, ctx)
+        False -> lexer.Skip
+      }
     _, "]" | _, "," | _, "[" | _, "{" | _, "\"" | _, "'" ->
       keep_plain_scalar(lexeme, ctx)
     _, "" -> keep_plain_scalar(lexeme, ctx)
@@ -24,12 +36,31 @@ pub fn lexer() -> Matcher(Token, Context) {
   }
 }
 
+fn ends_with_whitespace(s: String) -> Bool {
+  string.ends_with(s, " ")
+  || string.ends_with(s, "\t")
+  || string.ends_with(s, "\r")
+  || string.ends_with(s, "\n")
+}
+
 fn keep_plain_scalar(lexeme: String, ctx: Context) {
-  lexeme
-  |> string.trim_end()
-  |> fold_plain_scalar()
-  |> token.PlainScalar
-  |> lexer.Keep(ctx)
+  let scalar =
+    lexeme
+    |> string.trim_end()
+    |> fold_plain_scalar()
+
+  case string.ends_with(scalar, ":") {
+    True ->
+      scalar
+      |> string.drop_end(1)
+      |> string.trim_end()
+      |> token.MappingKey
+      |> lexer.Keep(ctx)
+    False ->
+      scalar
+      |> token.PlainScalar
+      |> lexer.Keep(ctx)
+  }
 }
 
 fn fold_plain_scalar(scalar: String) -> String {

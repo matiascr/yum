@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: lexer:flow_mapping:compact_mapping_in_sequence_test
+---
+Input:
+
+"[foo: bar, {JSON: like}:adjacent]"
+
+-----------------------------------------------------------------------
+
+```gleam
+[OpenSequence, MappingKey("foo"), PlainScalar("bar"), Comma, OpenMapping, MappingKey("JSON"), PlainScalar("like"), CloseMapping, Colon, PlainScalar("adjacent"), CloseSequence]
+
+```

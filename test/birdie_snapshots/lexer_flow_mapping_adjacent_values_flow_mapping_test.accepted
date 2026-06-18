@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: lexer:flow_mapping:adjacent_values_flow_mapping_test
+---
+Input:
+
+"{adjacent :value, readable: value, empty:}"
+
+-----------------------------------------------------------------------
+
+```gleam
+[OpenMapping, PlainScalar("adjacent :value"), Comma, MappingKey("readable"), PlainScalar("value"), Comma, MappingKey("empty"), CloseMapping]
+
+```

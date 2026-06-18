@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: parser:flow_mapping:empty_flow_mapping_test
+---
+Input:
+
+"{}"
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([])
+
+```

@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: parser:flow_mapping:quoted_adjacent_values_flow_mapping_test
+---
+Input:
+
+"{\"adjacent\":value, \"readable\": value, \"empty\":}"
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([#(String("adjacent"), String("value")), #(String("readable"), String("value")), #(String("empty"), Null)])
+
+```

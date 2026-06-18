@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: lexer:flow_mapping:omitted_key_and_value_flow_mapping_test
+---
+Input:
+
+"{omitted value:, : omitted key, solo}"
+
+-----------------------------------------------------------------------
+
+```gleam
+[OpenMapping, MappingKey("omitted value"), Comma, Colon, PlainScalar("omitted key"), Comma, PlainScalar("solo"), CloseMapping]
+
+```

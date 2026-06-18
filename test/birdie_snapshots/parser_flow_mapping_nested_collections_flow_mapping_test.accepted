@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: parser:flow_mapping:nested_collections_flow_mapping_test
+---
+Input:
+
+"{seq: [one, two], map: {inner: value}}"
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([#(String("seq"), Sequence([String("one"), String("two")])), #(String("map"), Mapping([#(String("inner"), String("value"))]))])
+
+```

@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: parser:flow_mapping:compact_mapping_in_sequence_test
+---
+Input:
+
+"[foo: bar, {JSON: like}:adjacent]"
+
+-----------------------------------------------------------------------
+
+```gleam
+Sequence([Mapping([#(String("foo"), String("bar"))]), Mapping([#(Mapping([#(String("JSON"), String("like"))]), String("adjacent"))])])
+
+```

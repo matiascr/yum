@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: parser:flow_mapping:omitted_key_and_value_flow_mapping_test
+---
+Input:
+
+"{omitted value:, : omitted key, solo}"
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([#(String("omitted value"), Null), Null(String("omitted key")), #(String("solo"), Null)])
+
+```

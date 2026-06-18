@@ -8,4 +8,5 @@ pub type Yaml {
   Nan
   String(String)
   Sequence(List(Yaml))
+  Mapping(List(#(Yaml, Yaml)))
 }

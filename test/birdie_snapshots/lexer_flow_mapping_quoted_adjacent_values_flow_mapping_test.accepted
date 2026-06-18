@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: lexer:flow_mapping:quoted_adjacent_values_flow_mapping_test
+---
+Input:
+
+"{\"adjacent\":value, \"readable\": value, \"empty\":}"
+
+-----------------------------------------------------------------------
+
+```gleam
+[OpenMapping, DoubleQuote, DoubleQuotedScalar("adjacent"), DoubleQuote, Colon, PlainScalar("value"), Comma, DoubleQuote, DoubleQuotedScalar("readable"), DoubleQuote, Colon, PlainScalar("value"), Comma, DoubleQuote, DoubleQuotedScalar("empty"), DoubleQuote, Colon, CloseMapping]
+
+```

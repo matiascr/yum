@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: parser:flow_mapping:url_plain_key_flow_mapping_test
+---
+Input:
+
+"{https://foo.com, other: value}"
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([#(String("https://foo.com"), Null), #(String("other"), String("value"))])
+
+```

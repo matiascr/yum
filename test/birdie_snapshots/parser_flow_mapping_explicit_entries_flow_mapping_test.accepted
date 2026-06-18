@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: parser:flow_mapping:explicit_entries_flow_mapping_test
+---
+Input:
+
+"{? explicit: entry, implicit: entry, ?}"
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([#(String("explicit"), String("entry")), #(String("implicit"), String("entry")), Null(Null)])
+
+```

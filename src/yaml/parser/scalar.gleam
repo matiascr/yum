@@ -37,6 +37,7 @@ pub fn parser() -> Parser(Yaml, Token, Context) {
     | token.Indentation(_)
     | token.DoubleQuotedScalar(_)
     | token.Escape(_)
+    | token.MappingKey(_)
     | token.InvalidEscape -> None
   }
 }

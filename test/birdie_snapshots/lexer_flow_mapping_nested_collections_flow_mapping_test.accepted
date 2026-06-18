@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: lexer:flow_mapping:nested_collections_flow_mapping_test
+---
+Input:
+
+"{seq: [one, two], map: {inner: value}}"
+
+-----------------------------------------------------------------------
+
+```gleam
+[OpenMapping, MappingKey("seq"), OpenSequence, PlainScalar("one"), Comma, PlainScalar("two"), CloseSequence, Comma, MappingKey("map"), OpenMapping, MappingKey("inner"), PlainScalar("value"), CloseMapping, CloseMapping]
+
+```
