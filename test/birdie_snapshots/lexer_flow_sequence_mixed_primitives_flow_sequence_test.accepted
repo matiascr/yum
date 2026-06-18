@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: lexer:flow_sequence:mixed_primitives_flow_sequence_test
+---
+Input:
+
+"[null, true, false, 123, 1.5, .nan]"
+
+-----------------------------------------------------------------------
+
+```gleam
+[OpenSequence, PlainScalar("null"), Comma, PlainScalar("true"), Comma, PlainScalar("false"), Comma, PlainScalar("123"), Comma, PlainScalar("1.5"), Comma, PlainScalar(".nan"), CloseSequence]
+
+```

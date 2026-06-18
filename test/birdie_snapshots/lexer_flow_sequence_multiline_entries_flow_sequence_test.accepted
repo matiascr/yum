@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: lexer:flow_sequence:multiline_entries_flow_sequence_test
+---
+Input:
+
+"[\"double\n quoted\", 'single\n quoted', plain\n text]"
+
+-----------------------------------------------------------------------
+
+```gleam
+[OpenSequence, DoubleQuote, DoubleQuotedScalar("double\n quoted"), DoubleQuote, Comma, SingleQuote, SingleQuotedScalar("single\n quoted"), Comma, PlainScalar("plain text"), CloseSequence]
+
+```

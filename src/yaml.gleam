@@ -3,8 +3,9 @@ pub type Yaml {
   Bool(Bool)
   Int(Int)
   Float(Float)
-  String(String)
   PosInf
   NegInf
   Nan
+  String(String)
+  Sequence(List(Yaml))
 }

@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: parser:flow_sequence:multiline_entries_flow_sequence_test
+---
+Input:
+
+"[\"double\n quoted\", 'single\n quoted', plain\n text]"
+
+-----------------------------------------------------------------------
+
+```gleam
+Sequence([String("double quoted"), String("single quoted"), String("plain text")])
+
+```

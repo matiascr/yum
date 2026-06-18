@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: lexer:flow_sequence:nested_empty_flow_sequence_test
+---
+Input:
+
+"[[], [one], []]"
+
+-----------------------------------------------------------------------
+
+```gleam
+[OpenSequence, OpenSequence, CloseSequence, Comma, OpenSequence, PlainScalar("one"), CloseSequence, Comma, OpenSequence, CloseSequence, CloseSequence]
+
+```

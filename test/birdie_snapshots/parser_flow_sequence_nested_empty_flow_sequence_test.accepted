@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: parser:flow_sequence:nested_empty_flow_sequence_test
+---
+Input:
+
+"[[], [one], []]"
+
+-----------------------------------------------------------------------
+
+```gleam
+Sequence([Sequence([]), Sequence([String("one")]), Sequence([])])
+
+```

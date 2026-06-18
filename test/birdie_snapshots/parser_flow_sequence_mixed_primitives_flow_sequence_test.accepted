@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: parser:flow_sequence:mixed_primitives_flow_sequence_test
+---
+Input:
+
+"[null, true, false, 123, 1.5, .nan]"
+
+-----------------------------------------------------------------------
+
+```gleam
+Sequence([Null, Bool(True), Bool(False), Int(123), Float(1.5), Nan])
+
+```

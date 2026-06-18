@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: lexer:flow_sequence:nested_flow_sequence_test
+---
+Input:
+
+"[one, [two, three], four]"
+
+-----------------------------------------------------------------------
+
+```gleam
+[OpenSequence, PlainScalar("one"), Comma, OpenSequence, PlainScalar("two"), Comma, PlainScalar("three"), CloseSequence, Comma, PlainScalar("four"), CloseSequence]
+
+```
