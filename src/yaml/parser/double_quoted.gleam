@@ -120,29 +120,26 @@ fn next_is_escaped_line_break(elements: List(DoubleQuotedElement)) -> Bool {
 ///
 /// When the next element is an escaped line break, trailing whitespace before
 /// that escape must be preserved instead of discarded.
-fn fold_scalar(
-  double_quoted_scalar: String,
+pub fn fold_scalar(
+  scalar: String,
   preserve_trailing_whitespace: Bool,
 ) -> String {
-  use <- bool.guard(when: double_quoted_scalar == "", return: "")
-  use <- bool.guard(
-    when: !string.contains(double_quoted_scalar, "\n"),
-    return: double_quoted_scalar,
-  )
+  use <- bool.guard(when: scalar == "", return: "")
+  use <- bool.guard(when: !string.contains(scalar, "\n"), return: scalar)
 
-  let #(double_quoted_scalar, preserved_trailing_whitespace) = case
+  let #(scalar, preserved_trailing_whitespace) = case
     preserve_trailing_whitespace
   {
-    True -> split_trailing_whitespace(double_quoted_scalar)
-    False -> #(double_quoted_scalar, "")
+    True -> split_trailing_whitespace(scalar)
+    False -> #(scalar, "")
   }
 
   let #(trimmed, ends_with_whitespace) =
-    double_quoted_scalar
+    scalar
     |> string.split("\n")
     |> fold_flow_lines()
 
-  let lead_padded = case starts_with_whitespace(double_quoted_scalar) {
+  let lead_padded = case starts_with_whitespace(scalar) {
     True -> " " <> trimmed
     False -> trimmed
   }

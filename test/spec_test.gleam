@@ -10,6 +10,30 @@ pub fn example_2_18_multi_line_flow_scalars_test() {
     |> Ok
 }
 
+pub fn example_2_17_single_quoted_scalar_test() {
+  let input = "'\"Howdy!\" he cried.'"
+
+  assert yum.parse(input)
+    == yaml.String("\"Howdy!\" he cried.")
+    |> Ok
+}
+
+pub fn example_2_17_single_quoted_comment_text_test() {
+  let input = "' # Not a ''comment''.'"
+
+  assert yum.parse(input)
+    == yaml.String(" # Not a 'comment'.")
+    |> Ok
+}
+
+pub fn example_2_17_single_quoted_backslash_test() {
+  let input = "'|\\-*-/|'"
+
+  assert yum.parse(input)
+    == yaml.String("|\\-*-/|")
+    |> Ok
+}
+
 pub fn example_5_13_escaped_backslash_characters_test() {
   let input = "\"Fun with \\\\\""
 
@@ -82,6 +106,22 @@ pub fn example_7_5_double_quoted_line_breaks_test() {
 
 pub fn example_7_6_double_quoted_lines_test() {
   let input = "\" 1st non-empty\n\n 2nd non-empty \n\t3rd non-empty \""
+
+  assert yum.parse(input)
+    == yaml.String(" 1st non-empty\n2nd non-empty 3rd non-empty ")
+    |> Ok
+}
+
+pub fn example_7_7_single_quoted_characters_test() {
+  let input = "'here''s to \"quotes\"'"
+
+  assert yum.parse(input)
+    == yaml.String("here's to \"quotes\"")
+    |> Ok
+}
+
+pub fn example_7_9_single_quoted_lines_test() {
+  let input = "' 1st non-empty\n\n 2nd non-empty \n\t3rd non-empty '"
 
   assert yum.parse(input)
     == yaml.String(" 1st non-empty\n2nd non-empty 3rd non-empty ")

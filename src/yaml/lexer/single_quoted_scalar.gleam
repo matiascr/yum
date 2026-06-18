@@ -3,6 +3,20 @@ import yaml/lexer/context.{type Context}
 import yaml/token.{type Token}
 
 pub fn lexer() -> Matcher(Token, Context) {
-  use _ctx, _lexeme, _lookahead <- lexer.custom()
-  todo as "implement single-quoted scalar lexer"
+  use ctx, lexeme, lookahead <- lexer.custom()
+  let assert context.SingleQuotedScalar(prev:) = ctx
+  case lexeme, lookahead {
+    "'", "'" -> lexer.Skip
+    "''", _ -> token.SingleQuotedScalar("'") |> lexer.Keep(ctx)
+
+    "'", _ -> lexer.Drop(prev)
+
+    "", "'" -> lexer.Skip
+    lexeme, "'" ->
+      lexeme
+      |> token.SingleQuotedScalar
+      |> lexer.Keep(ctx)
+
+    _, _ -> lexer.Skip
+  }
 }

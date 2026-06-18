@@ -10,6 +10,7 @@ import yaml.{type Yaml}
 import yaml/error.{type YamlError}
 import yaml/lexer/context.{type Context}
 import yaml/parser/double_quoted
+import yaml/parser/single_quoted
 import yaml/token.{type Token}
 
 pub fn parse(tokens: List(lexer.Token(Token))) -> Result(Yaml, YamlError) {
@@ -24,8 +25,9 @@ fn parser() -> Parser(Yaml, Token, Context) {
 
 fn default_parser() -> Parser(Yaml, Token, Context) {
   nibble.one_of([
-    value_parser(),
     double_quoted.parser(),
+    single_quoted.parser(),
+    value_parser(),
   ])
 }
 
