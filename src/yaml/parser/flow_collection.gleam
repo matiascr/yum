@@ -7,7 +7,16 @@ import yaml/parser/scalar
 import yaml/parser/single_quoted
 import yaml/token.{type Token}
 
-pub fn sequence_parser() -> Parser(Yaml, Token, Context) {
+pub fn parser() -> Parser(Yaml, Token, Context) {
+  nibble.lazy(fn() {
+    nibble.one_of([
+      sequence_parser(),
+      mapping_parser(),
+    ])
+  })
+}
+
+fn sequence_parser() -> Parser(Yaml, Token, Context) {
   use _ <- do(nibble.token(token.OpenSequence))
   use entries <- do(nibble.sequence(
     nibble.optional(sequence_entry_parser()),
@@ -22,7 +31,7 @@ pub fn sequence_parser() -> Parser(Yaml, Token, Context) {
   |> return
 }
 
-pub fn mapping_parser() -> Parser(Yaml, Token, Context) {
+fn mapping_parser() -> Parser(Yaml, Token, Context) {
   use _ <- do(nibble.token(token.OpenMapping))
   use entries <- do(nibble.sequence(
     nibble.optional(mapping_entry_parser()),
