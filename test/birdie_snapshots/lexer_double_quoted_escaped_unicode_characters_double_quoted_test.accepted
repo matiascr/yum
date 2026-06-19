@@ -4,7 +4,9 @@ title: lexer:double_quoted:escaped_unicode_characters_double_quoted_test
 ---
 Input:
 
-"\"\\  \\_ \\N \\L \\P \\x41 \\u0042 \\U00000043\""
+```yaml
+"\  \_ \N \L \P \x41 \u0042 \U00000043"
+```
 
 -----------------------------------------------------------------------
 

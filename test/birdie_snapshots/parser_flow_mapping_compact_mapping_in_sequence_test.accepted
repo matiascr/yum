@@ -4,7 +4,9 @@ title: parser:flow_mapping:compact_mapping_in_sequence_test
 ---
 Input:
 
-"[foo: bar, {JSON: like}:adjacent]"
+```yaml
+[foo: bar, {JSON: like}:adjacent]
+```
 
 -----------------------------------------------------------------------
 

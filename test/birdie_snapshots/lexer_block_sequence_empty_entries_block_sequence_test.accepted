@@ -1,0 +1,18 @@
+---
+version: 2.0.1
+title: lexer:block_sequence:empty_entries_block_sequence_test
+---
+Input:
+
+```yaml
+-
+- two
+-
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[Hyphen, Indentation(0), Hyphen, PlainScalar("two"), Indentation(0), Hyphen]
+
+```

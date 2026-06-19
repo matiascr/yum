@@ -1,0 +1,22 @@
+---
+version: 2.0.1
+title: lexer:block_sequence:mixed_nodes_block_sequence_test
+---
+Input:
+
+```yaml
+- null
+- true
+- 123
+- [one, two]
+- {key: value}
+- "double quoted"
+- 'single quoted'
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[Hyphen, PlainScalar("null"), Indentation(0), Hyphen, PlainScalar("true"), Indentation(0), Hyphen, PlainScalar("123"), Indentation(0), Hyphen, OpenSequence, PlainScalar("one"), Comma, PlainScalar("two"), CloseSequence, Indentation(0), Hyphen, OpenMapping, MappingKey("key"), PlainScalar("value"), CloseMapping, Indentation(0), Hyphen, DoubleQuote, DoubleQuotedScalar("double quoted"), DoubleQuote, Indentation(0), Hyphen, SingleQuote, SingleQuotedScalar("single quoted")]
+
+```

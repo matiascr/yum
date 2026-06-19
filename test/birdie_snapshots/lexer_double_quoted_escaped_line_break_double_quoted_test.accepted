@@ -4,7 +4,10 @@ title: lexer:double_quoted:escaped_line_break_double_quoted_test
 ---
 Input:
 
-"\"folded \\\n  together\""
+```yaml
+"folded \
+  together"
+```
 
 -----------------------------------------------------------------------
 

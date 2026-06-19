@@ -4,7 +4,9 @@ title: parser:flow_mapping:nested_collections_flow_mapping_test
 ---
 Input:
 
-"{seq: [one, two], map: {inner: value}}"
+```yaml
+{seq: [one, two], map: {inner: value}}
+```
 
 -----------------------------------------------------------------------
 

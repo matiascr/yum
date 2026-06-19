@@ -1,0 +1,17 @@
+---
+version: 2.0.1
+title: lexer:block_sequence:dash_inside_scalar_block_sequence_test
+---
+Input:
+
+```yaml
+- one-two
+- --not an entry marker
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[Hyphen, PlainScalar("one-two"), Indentation(0), Hyphen, PlainScalar("--not an entry marker")]
+
+```

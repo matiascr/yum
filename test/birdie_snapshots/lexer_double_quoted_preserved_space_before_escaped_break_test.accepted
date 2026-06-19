@@ -4,7 +4,10 @@ title: lexer:double_quoted:preserved_space_before_escaped_break_test
 ---
 Input:
 
-"\"keep  \\\n  next\""
+```yaml
+"keep  \
+  next"
+```
 
 -----------------------------------------------------------------------
 

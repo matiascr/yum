@@ -83,9 +83,9 @@ fn snap(parsed: _, input: String, title: String) {
     let result = string.inspect(yaml)
 
     let snap_contents =
-      "Input:\n\n"
-      <> string.inspect(input)
-      <> "\n\n"
+      "Input:\n\n```yaml\n"
+      <> input
+      <> "\n```\n\n"
       <> string.repeat("-", 71)
       <> "\n\n```gleam\n"
       <> result

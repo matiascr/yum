@@ -122,9 +122,9 @@ fn snap(
     let result = string.inspect(unwrapped)
 
     let snap_contents =
-      "Input:\n\n"
-      <> string.inspect(input)
-      <> "\n\n"
+      "Input:\n\n```yaml\n"
+      <> input
+      <> "\n```\n\n"
       <> string.repeat("-", 71)
       <> "\n\n```gleam\n"
       <> result

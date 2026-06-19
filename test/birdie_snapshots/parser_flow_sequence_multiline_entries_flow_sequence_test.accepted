@@ -4,7 +4,12 @@ title: parser:flow_sequence:multiline_entries_flow_sequence_test
 ---
 Input:
 
-"[\"double\n quoted\", 'single\n quoted', plain\n text]"
+```yaml
+["double
+ quoted", 'single
+ quoted', plain
+ text]
+```
 
 -----------------------------------------------------------------------
 

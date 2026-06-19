@@ -4,7 +4,9 @@ title: parser:flow_mapping:whitespace_and_trailing_comma_flow_mapping_test
 ---
 Input:
 
-"{ one : two , three: four , }"
+```yaml
+{ one : two , three: four , }
+```
 
 -----------------------------------------------------------------------
 

@@ -4,7 +4,9 @@ title: parser:flow_sequence:trailing_comma_flow_sequence_test
 ---
 Input:
 
-"[one, two,]"
+```yaml
+[one, two,]
+```
 
 -----------------------------------------------------------------------
 

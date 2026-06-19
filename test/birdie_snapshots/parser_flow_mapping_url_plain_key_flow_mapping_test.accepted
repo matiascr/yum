@@ -4,7 +4,9 @@ title: parser:flow_mapping:url_plain_key_flow_mapping_test
 ---
 Input:
 
-"{https://foo.com, other: value}"
+```yaml
+{https://foo.com, other: value}
+```
 
 -----------------------------------------------------------------------
 

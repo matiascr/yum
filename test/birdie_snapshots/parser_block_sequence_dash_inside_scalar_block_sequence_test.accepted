@@ -1,0 +1,17 @@
+---
+version: 2.0.1
+title: parser:block_sequence:dash_inside_scalar_block_sequence_test
+---
+Input:
+
+```yaml
+- one-two
+- --not an entry marker
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Sequence([String("one-two"), String("--not an entry marker")])
+
+```

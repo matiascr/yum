@@ -4,7 +4,9 @@ title: lexer:flow_mapping:explicit_entries_flow_mapping_test
 ---
 Input:
 
-"{? explicit: entry, implicit: entry, ?}"
+```yaml
+{? explicit: entry, implicit: entry, ?}
+```
 
 -----------------------------------------------------------------------
 

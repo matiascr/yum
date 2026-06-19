@@ -4,7 +4,9 @@ title: parser:flow_mapping:empty_flow_mapping_test
 ---
 Input:
 
-"{}"
+```yaml
+{}
+```
 
 -----------------------------------------------------------------------
 

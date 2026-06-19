@@ -4,7 +4,11 @@ title: parser:double_quoted:empty_line_fold_double_quoted_test
 ---
 Input:
 
-"\"folded\n\nas a line feed\""
+```yaml
+"folded
+
+as a line feed"
+```
 
 -----------------------------------------------------------------------
 

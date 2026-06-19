@@ -4,7 +4,9 @@ title: lexer:double_quoted:escaped_quotes_and_slashes_double_quoted_test
 ---
 Input:
 
-"\"\\\" \\/ \\\\\""
+```yaml
+"\" \/ \\"
+```
 
 -----------------------------------------------------------------------
 

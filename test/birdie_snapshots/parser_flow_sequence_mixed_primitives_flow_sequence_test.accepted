@@ -4,7 +4,9 @@ title: parser:flow_sequence:mixed_primitives_flow_sequence_test
 ---
 Input:
 
-"[null, true, false, 123, 1.5, .nan]"
+```yaml
+[null, true, false, 123, 1.5, .nan]
+```
 
 -----------------------------------------------------------------------
 

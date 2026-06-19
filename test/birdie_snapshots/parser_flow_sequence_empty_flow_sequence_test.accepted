@@ -4,7 +4,9 @@ title: parser:flow_sequence:empty_flow_sequence_test
 ---
 Input:
 
-"[]"
+```yaml
+[]
+```
 
 -----------------------------------------------------------------------
 

@@ -26,7 +26,7 @@ fn lexer() -> Lexer(Token, Context) {
       ]
 
       // Flow Style Productions
-      context.FlowStyle(prev: _) -> [plain_scalar.lexer()]
+      context.FlowStyle(prev: _) -> [indentation.lexer(), plain_scalar.lexer()]
       context.FlowMapping(prev: _) -> [flow_mapping.lexer()]
       context.FlowSequence(prev: _) -> [flow_sequence.lexer()]
       context.DoubleQuotedScalar(prev: _) -> [double_quoted_scalar.lexer()]

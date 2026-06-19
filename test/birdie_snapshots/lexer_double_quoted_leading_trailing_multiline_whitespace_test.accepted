@@ -4,7 +4,11 @@ title: lexer:double_quoted:leading_trailing_multiline_whitespace_test
 ---
 Input:
 
-"\"  first\n second \n\""
+```yaml
+"  first
+ second 
+"
+```
 
 -----------------------------------------------------------------------
 

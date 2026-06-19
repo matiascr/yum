@@ -1,0 +1,21 @@
+---
+version: 2.0.1
+title: parser:block_sequence:blank_lines_block_sequence_test
+---
+Input:
+
+```yaml
+- one
+
+- two
+
+
+- three
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Sequence([String("one"), String("two"), String("three")])
+
+```

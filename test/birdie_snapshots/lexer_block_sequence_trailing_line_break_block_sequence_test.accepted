@@ -1,0 +1,18 @@
+---
+version: 2.0.1
+title: lexer:block_sequence:trailing_line_break_block_sequence_test
+---
+Input:
+
+```yaml
+- one
+- two
+
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[Hyphen, PlainScalar("one"), Indentation(0), Hyphen, PlainScalar("two")]
+
+```

@@ -4,7 +4,9 @@ title: parser:flow_sequence:nested_flow_sequence_test
 ---
 Input:
 
-"[one, [two, three], four]"
+```yaml
+[one, [two, three], four]
+```
 
 -----------------------------------------------------------------------
 

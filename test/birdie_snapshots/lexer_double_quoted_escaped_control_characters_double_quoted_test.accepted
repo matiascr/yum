@@ -4,7 +4,9 @@ title: lexer:double_quoted:escaped_control_characters_double_quoted_test
 ---
 Input:
 
-"\"\\0 \\a \\b \\t \\n \\v \\f \\r \\e\""
+```yaml
+"\0 \a \b \t \n \v \f \r \e"
+```
 
 -----------------------------------------------------------------------
 

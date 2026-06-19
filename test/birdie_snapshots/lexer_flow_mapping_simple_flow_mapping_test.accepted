@@ -4,7 +4,9 @@ title: lexer:flow_mapping:simple_flow_mapping_test
 ---
 Input:
 
-"{one: two, three: four}"
+```yaml
+{one: two, three: four}
+```
 
 -----------------------------------------------------------------------
 

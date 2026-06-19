@@ -4,7 +4,9 @@ title: lexer:flow_sequence:quoted_entries_flow_sequence_test
 ---
 Input:
 
-"[\"double quoted\", 'single ''quoted''']"
+```yaml
+["double quoted", 'single ''quoted''']
+```
 
 -----------------------------------------------------------------------
 

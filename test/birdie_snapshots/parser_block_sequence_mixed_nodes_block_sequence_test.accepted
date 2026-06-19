@@ -1,0 +1,22 @@
+---
+version: 2.0.1
+title: parser:block_sequence:mixed_nodes_block_sequence_test
+---
+Input:
+
+```yaml
+- null
+- true
+- 123
+- [one, two]
+- {key: value}
+- "double quoted"
+- 'single quoted'
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Sequence([Null, Bool(True), Int(123), Sequence([String("one"), String("two")]), Mapping([#(String("key"), String("value"))]), String("double quoted"), String("single quoted")])
+
+```

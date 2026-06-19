@@ -2,6 +2,18 @@ import gleam/result
 import yaml.{Mapping, Null, Sequence, String}
 import yum
 
+pub fn example_2_1_sequence_of_scalars_test() {
+  let input = "- Mark McGwire\n- Sammy Sosa\n- Ken Griffey"
+
+  assert yum.parse(input)
+    == Sequence([
+      String("Mark McGwire"),
+      String("Sammy Sosa"),
+      String("Ken Griffey"),
+    ])
+    |> Ok
+}
+
 pub fn example_2_17_quoted_scalars_test() {
   let input =
     "{ unicode: \"Sosa did fine.\\u263A\", control: \"\\b1998\\t1999\\t2000\\n\", hex esc: \"\\x0d\\x0a is \\r\\n\", single: '\"Howdy!\" he cried.', quoted: ' # Not a ''comment''.', tie-fighter: '|\\-*-/|' }"
@@ -49,7 +61,9 @@ pub fn example_5_4_flow_collection_indicators_test() {
 
 pub fn example_5_13_escaped_characters_test() {
   let input =
-    "[\"Fun with \\\\\", \"\\\" \\a \\b \\e \\f\", \"\\n \\r \\t \\v \\0\", \"\\  \\_ \\N \\L \\P \\\n  \\x41 \\u0041 \\U00000041\"]"
+    "- \"Fun with "
+    <> "\\\\"
+    <> "\"\n- \"\\\" \\a \\b \\e \\f\"\n- \"\\n \\r \\t \\v \\0\"\n- \"\\  \\_ \\N \\L \\P \\\n  \\x41 \\u0041 \\U00000041\""
 
   assert yum.parse(input)
     == Sequence([
@@ -180,7 +194,7 @@ pub fn example_7_12_plain_lines_test() {
 }
 
 pub fn example_7_13_flow_sequence_test() {
-  let input = "[[ one, two, ], [three ,four]]"
+  let input = "- [ one, two, ]\n- [three ,four]"
 
   assert yum.parse(input)
     == Sequence([
@@ -191,7 +205,7 @@ pub fn example_7_13_flow_sequence_test() {
 }
 
 pub fn example_7_23_flow_content_test() {
-  let input = "[ [ a, b ], { a: b }, \"a\", 'b', c ]"
+  let input = "- [ a, b ]\n- { a: b }\n- \"a\"\n- 'b'\n- c"
 
   assert yum.parse(input)
     == Sequence([
@@ -220,7 +234,7 @@ pub fn example_7_14_flow_sequence_entries_test() {
 }
 
 pub fn example_7_15_flow_mappings_test() {
-  let input = "[{ one : two , three: four , }, {five: six,seven : eight}]"
+  let input = "- { one : two , three: four , }\n- {five: six,seven : eight}"
 
   assert yum.parse(input)
     == Sequence([
@@ -292,7 +306,7 @@ pub fn example_7_20_single_pair_explicit_entry_test() {
 
 pub fn example_7_21_single_pair_implicit_entries_test() {
   let input =
-    "[[ YAML : separate ], [ : empty key entry ], [ {JSON: like}:adjacent ]]"
+    "- [ YAML : separate ]\n- [ : empty key entry ]\n- [ {JSON: like}:adjacent ]"
 
   assert yum.parse(input)
     == Sequence([

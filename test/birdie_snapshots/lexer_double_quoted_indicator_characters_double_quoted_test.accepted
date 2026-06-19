@@ -4,7 +4,9 @@ title: lexer:double_quoted:indicator_characters_double_quoted_test
 ---
 Input:
 
-"\"- ? : , [ ] { } # & * ! | > ' % @ `\""
+```yaml
+"- ? : , [ ] { } # & * ! | > ' % @ `"
+```
 
 -----------------------------------------------------------------------
 

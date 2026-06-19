@@ -4,7 +4,9 @@ title: parser:flow_mapping:quoted_adjacent_values_flow_mapping_test
 ---
 Input:
 
-"{\"adjacent\":value, \"readable\": value, \"empty\":}"
+```yaml
+{"adjacent":value, "readable": value, "empty":}
+```
 
 -----------------------------------------------------------------------
 

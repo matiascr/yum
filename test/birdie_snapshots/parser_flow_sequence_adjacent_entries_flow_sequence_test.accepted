@@ -4,7 +4,9 @@ title: parser:flow_sequence:adjacent_entries_flow_sequence_test
 ---
 Input:
 
-"[one,two,three]"
+```yaml
+[one,two,three]
+```
 
 -----------------------------------------------------------------------
 

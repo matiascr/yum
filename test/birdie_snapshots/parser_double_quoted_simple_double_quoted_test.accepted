@@ -4,7 +4,9 @@ title: parser:double_quoted:simple_double_quoted_test
 ---
 Input:
 
-"\"hello world\""
+```yaml
+"hello world"
+```
 
 -----------------------------------------------------------------------
 

@@ -4,7 +4,9 @@ title: lexer:flow_mapping:omitted_key_and_value_flow_mapping_test
 ---
 Input:
 
-"{omitted value:, : omitted key, solo}"
+```yaml
+{omitted value:, : omitted key, solo}
+```
 
 -----------------------------------------------------------------------
 
