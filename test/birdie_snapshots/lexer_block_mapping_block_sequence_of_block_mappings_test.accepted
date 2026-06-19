@@ -1,0 +1,21 @@
+---
+version: 2.0.1
+title: lexer:block_mapping:block_sequence_of_block_mappings_test
+---
+Input:
+
+```yaml
+-
+  name: Mark
+  hr: 65
+-
+  name: Sammy
+  hr: 63
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[Hyphen, Indentation(2), MappingKey("name"), PlainScalar("Mark"), Indentation(2), MappingKey("hr"), PlainScalar("65"), Indentation(0), Hyphen, Indentation(2), MappingKey("name"), PlainScalar("Sammy"), Indentation(2), MappingKey("hr"), PlainScalar("63")]
+
+```

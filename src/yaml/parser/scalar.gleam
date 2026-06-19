@@ -55,7 +55,7 @@ pub fn parse(value: String) -> Option(Yaml) {
   |> option.or(Some(yaml.String(value)))
 }
 
-const null_regex = "null|Null|NULL|~"
+const null_regex = "^(null|Null|NULL|~)$"
 
 fn parse_null(input: String) -> Option(Yaml) {
   let assert Ok(regex) = regexp.from_string(null_regex)
@@ -65,7 +65,7 @@ fn parse_null(input: String) -> Option(Yaml) {
   }
 }
 
-const bool_regex = "true|True|TRUE|false|False|FALSE"
+const bool_regex = "^(true|True|TRUE|false|False|FALSE)$"
 
 fn parse_bool(input: String) -> Option(Yaml) {
   let assert Ok(regex) = regexp.from_string(bool_regex)
@@ -82,7 +82,7 @@ fn parse_bool(input: String) -> Option(Yaml) {
   }
 }
 
-const int_regex = "[-+]?[0-9]+"
+const int_regex = "^[-+]?[0-9]+$"
 
 fn parse_int(input: String) -> Option(Yaml) {
   let assert Ok(regex) = regexp.from_string(int_regex)
@@ -100,7 +100,7 @@ fn parse_int(input: String) -> Option(Yaml) {
   }
 }
 
-const octal_regex = "0o[0-7]+"
+const octal_regex = "^0o[0-7]+$"
 
 fn parse_octal(input: String) -> Option(Yaml) {
   let assert Ok(regex) = regexp.from_string(octal_regex)
@@ -119,7 +119,7 @@ fn parse_octal(input: String) -> Option(Yaml) {
   }
 }
 
-const hexadecimal_regex = "0x[0-9a-fA-F]+"
+const hexadecimal_regex = "^0x[0-9a-fA-F]+$"
 
 fn parse_hexadecimal(input: String) -> Option(Yaml) {
   let assert Ok(regex) = regexp.from_string(hexadecimal_regex)
@@ -138,7 +138,7 @@ fn parse_hexadecimal(input: String) -> Option(Yaml) {
   }
 }
 
-const float_regex = "[-+]?(\\.[0-9]+|[0-9]+)\\.([0-9]*)?([eE][-+]?[0-9]+)?"
+const float_regex = "^[-+]?(\\.[0-9]+|[0-9]+)\\.([0-9]*)?([eE][-+]?[0-9]+)?$"
 
 fn parse_float(input: String) {
   let assert Ok(regex) = regexp.from_string(float_regex)
@@ -180,7 +180,7 @@ fn parse_float(input: String) {
   }
 }
 
-const inf_regex = "[-+]?(\\.inf|\\.Inf|\\.INF)"
+const inf_regex = "^[-+]?(\\.inf|\\.Inf|\\.INF)$"
 
 fn parse_inf(input: String) -> Option(Yaml) {
   let assert Ok(regex) = regexp.from_string(inf_regex)
@@ -195,7 +195,7 @@ fn parse_inf(input: String) -> Option(Yaml) {
   }
 }
 
-const nan_regex = "\\.nan|\\.NaN|\\.NAN"
+const nan_regex = "^(\\.nan|\\.NaN|\\.NAN)$"
 
 fn parse_nan(input: String) -> Option(Yaml) {
   let assert Ok(regex) = regexp.from_string(nan_regex)

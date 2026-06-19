@@ -1,0 +1,18 @@
+---
+version: 2.0.1
+title: lexer:block_mapping:urls_and_colons_block_mapping_test
+---
+Input:
+
+```yaml
+url: https://example.com/foo#bar
+https://example.com/foo: value
+literal: not:a key
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[MappingKey("url"), PlainScalar("https://example.com/foo#bar"), Indentation(0), MappingKey("https://example.com/foo"), PlainScalar("value"), Indentation(0), MappingKey("literal"), PlainScalar("not:a key")]
+
+```

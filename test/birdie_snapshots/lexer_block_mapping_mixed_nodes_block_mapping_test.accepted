@@ -1,0 +1,22 @@
+---
+version: 2.0.1
+title: lexer:block_mapping:mixed_nodes_block_mapping_test
+---
+Input:
+
+```yaml
+null: null
+true: true
+number: 123
+sequence: [one, two]
+mapping: {key: value}
+double: "double quoted"
+single: 'single quoted'
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[MappingKey("null"), PlainScalar("null"), Indentation(0), MappingKey("true"), PlainScalar("true"), Indentation(0), MappingKey("number"), PlainScalar("123"), Indentation(0), MappingKey("sequence"), OpenSequence, PlainScalar("one"), Comma, PlainScalar("two"), CloseSequence, Indentation(0), MappingKey("mapping"), OpenMapping, MappingKey("key"), PlainScalar("value"), CloseMapping, Indentation(0), MappingKey("double"), DoubleQuote, DoubleQuotedScalar("double quoted"), DoubleQuote, Indentation(0), MappingKey("single"), SingleQuote, SingleQuotedScalar("single quoted")]
+
+```

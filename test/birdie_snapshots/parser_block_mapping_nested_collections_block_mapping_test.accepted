@@ -1,0 +1,21 @@
+---
+version: 2.0.1
+title: parser:block_mapping:nested_collections_block_mapping_test
+---
+Input:
+
+```yaml
+outer:
+  inner: value
+  list:
+    - one
+    - two
+sibling: done
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([#(String("outer"), Mapping([#(String("inner"), String("value")), #(String("list"), Sequence([String("one"), String("two")]))])), #(String("sibling"), String("done"))])
+
+```

@@ -1,0 +1,21 @@
+---
+version: 2.0.1
+title: lexer:block_mapping:nested_collections_block_mapping_test
+---
+Input:
+
+```yaml
+outer:
+  inner: value
+  list:
+    - one
+    - two
+sibling: done
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[MappingKey("outer"), Indentation(2), MappingKey("inner"), PlainScalar("value"), Indentation(2), MappingKey("list"), Indentation(4), Hyphen, PlainScalar("one"), Indentation(4), Hyphen, PlainScalar("two"), Indentation(0), MappingKey("sibling"), PlainScalar("done")]
+
+```

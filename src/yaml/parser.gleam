@@ -5,6 +5,7 @@ import nibble/lexer
 import yaml.{type Yaml}
 import yaml/error.{type YamlError}
 import yaml/lexer/context.{type Context}
+import yaml/parser/block_mapping
 import yaml/parser/block_sequence
 import yaml/parser/double_quoted
 import yaml/parser/flow_mapping
@@ -29,6 +30,7 @@ fn parser() -> Parser(Yaml, Token, Context) {
 fn default_parser() -> Parser(Yaml, Token, Context) {
   nibble.one_of([
     block_sequence.parser(),
+    block_mapping.parser(),
     flow_sequence.parser(),
     flow_mapping.parser(),
     double_quoted.parser(),

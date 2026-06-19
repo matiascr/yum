@@ -1,0 +1,18 @@
+---
+version: 2.0.1
+title: parser:block_mapping:urls_and_colons_block_mapping_test
+---
+Input:
+
+```yaml
+url: https://example.com/foo#bar
+https://example.com/foo: value
+literal: not:a key
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([#(String("url"), String("https://example.com/foo#bar")), #(String("https://example.com/foo"), String("value")), #(String("literal"), String("not:a key"))])
+
+```

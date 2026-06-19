@@ -1,0 +1,21 @@
+---
+version: 2.0.1
+title: parser:block_mapping:block_sequence_of_block_mappings_test
+---
+Input:
+
+```yaml
+-
+  name: Mark
+  hr: 65
+-
+  name: Sammy
+  hr: 63
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Sequence([Mapping([#(String("name"), String("Mark")), #(String("hr"), Int(65))]), Mapping([#(String("name"), String("Sammy")), #(String("hr"), Int(63))])])
+
+```

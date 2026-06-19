@@ -1,0 +1,22 @@
+---
+version: 2.0.1
+title: parser:block_mapping:mixed_nodes_block_mapping_test
+---
+Input:
+
+```yaml
+null: null
+true: true
+number: 123
+sequence: [one, two]
+mapping: {key: value}
+double: "double quoted"
+single: 'single quoted'
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([Null(Null), #(Bool(True), Bool(True)), #(String("number"), Int(123)), #(String("sequence"), Sequence([String("one"), String("two")])), #(String("mapping"), Mapping([#(String("key"), String("value"))])), #(String("double"), String("double quoted")), #(String("single"), String("single quoted"))])
+
+```

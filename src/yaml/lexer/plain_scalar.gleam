@@ -15,16 +15,41 @@ pub fn lexer() -> Matcher(Token, Context) {
     "\"", _ -> token.DoubleQuote |> lexer.Keep(context.DoubleQuotedScalar(ctx))
     "'", _ -> token.SingleQuote |> lexer.Keep(context.SingleQuotedScalar(ctx))
 
-    _, "\n" -> keep_plain_scalar(lexeme, prev)
-    _, "" -> keep_plain_scalar(lexeme, prev)
+    _, " " | _, "\t" | _, "\r" ->
+      case string.ends_with(lexeme, ":") {
+        True -> keep_mapping_key(lexeme)(ctx)
+        False -> lexer.Skip
+      }
+    _, "\n" ->
+      case string.ends_with(lexeme, ":") {
+        True -> keep_mapping_key(lexeme)(ctx)
+        False -> keep_plain_scalar(lexeme)(prev)
+      }
+    _, "" ->
+      case string.ends_with(lexeme, ":") {
+        True -> keep_mapping_key(lexeme)(ctx)
+        False -> keep_plain_scalar(lexeme)(prev)
+      }
     _, _ -> lexer.Skip
   }
 }
 
-fn keep_plain_scalar(lexeme: String, next: Context) {
-  lexeme
-  // Leading whitespace is already being dropped in the lexer
-  |> string.trim_end()
-  |> token.PlainScalar
-  |> lexer.Keep(next)
+fn keep_mapping_key(lexeme: String) {
+  let key =
+    lexeme
+    |> string.drop_end(1)
+    |> string.trim_end()
+    |> token.MappingKey
+
+  lexer.Keep(key, _)
+}
+
+fn keep_plain_scalar(lexeme: String) {
+  let key =
+    lexeme
+    // Leading whitespace is already being dropped in the lexer
+    |> string.trim_end()
+    |> token.PlainScalar
+
+  lexer.Keep(key, _)
 }

@@ -1,5 +1,5 @@
 import gleam/result
-import yaml.{Mapping, Null, Sequence, String}
+import yaml.{Bool, Float, Int, Mapping, Nan, NegInf, Null, Sequence, String}
 import yum
 
 pub fn example_2_1_sequence_of_scalars_test() {
@@ -14,9 +14,91 @@ pub fn example_2_1_sequence_of_scalars_test() {
     |> Ok
 }
 
+pub fn example_2_2_mapping_scalars_to_scalars_test() {
+  let input = "hr:  65\navg: 0.278\nrbi: 147"
+
+  assert yum.parse(input)
+    == Mapping([
+      #(String("hr"), Int(65)),
+      #(String("avg"), Float(0.278)),
+      #(String("rbi"), Int(147)),
+    ])
+    |> Ok
+}
+
+pub fn example_2_3_mapping_scalars_to_sequences_test() {
+  let input =
+    "american:\n- Boston Red Sox\n- Detroit Tigers\n- New York Yankees\nnational:\n- New York Mets\n- Chicago Cubs\n- Atlanta Braves"
+
+  assert yum.parse(input)
+    == Mapping([
+      #(
+        String("american"),
+        Sequence([
+          String("Boston Red Sox"),
+          String("Detroit Tigers"),
+          String("New York Yankees"),
+        ]),
+      ),
+      #(
+        String("national"),
+        Sequence([
+          String("New York Mets"),
+          String("Chicago Cubs"),
+          String("Atlanta Braves"),
+        ]),
+      ),
+    ])
+    |> Ok
+}
+
+pub fn example_2_4_sequence_of_mappings_test() {
+  let input =
+    "-\n  name: Mark McGwire\n  hr:   65\n  avg:  0.278\n-\n  name: Sammy Sosa\n  hr:   63\n  avg:  0.288"
+
+  assert yum.parse(input)
+    == Sequence([
+      Mapping([
+        #(String("name"), String("Mark McGwire")),
+        #(String("hr"), Int(65)),
+        #(String("avg"), Float(0.278)),
+      ]),
+      Mapping([
+        #(String("name"), String("Sammy Sosa")),
+        #(String("hr"), Int(63)),
+        #(String("avg"), Float(0.288)),
+      ]),
+    ])
+    |> Ok
+}
+
+pub fn example_2_6_mapping_of_mappings_test() {
+  let input =
+    "Mark McGwire: {hr: 65, avg: 0.278}\nSammy Sosa: {\n    hr: 63,\n    avg: 0.288,\n }"
+
+  assert yum.parse(input)
+    == Mapping([
+      #(
+        String("Mark McGwire"),
+        Mapping([
+          #(String("hr"), Int(65)),
+          #(String("avg"), Float(0.278)),
+        ]),
+      ),
+      #(
+        String("Sammy Sosa"),
+        Mapping([
+          #(String("hr"), Int(63)),
+          #(String("avg"), Float(0.288)),
+        ]),
+      ),
+    ])
+    |> Ok
+}
+
 pub fn example_2_17_quoted_scalars_test() {
   let input =
-    "{ unicode: \"Sosa did fine.\\u263A\", control: \"\\b1998\\t1999\\t2000\\n\", hex esc: \"\\x0d\\x0a is \\r\\n\", single: '\"Howdy!\" he cried.', quoted: ' # Not a ''comment''.', tie-fighter: '|\\-*-/|' }"
+    "unicode: \"Sosa did fine.\\u263A\"\ncontrol: \"\\b1998\\t1999\\t2000\\n\"\nhex esc: \"\\x0d\\x0a is \\r\\n\"\n\nsingle: '\"Howdy!\" he cried.'\nquoted: ' # Not a ''comment''.'\ntie-fighter: '|\\-*-/|'"
 
   assert yum.parse(input)
     == Mapping([
@@ -43,7 +125,7 @@ pub fn example_2_18_multi_line_flow_scalars_test() {
 }
 
 pub fn example_5_4_flow_collection_indicators_test() {
-  let input = "{ sequence: [ one, two, ], mapping: { sky: blue, sea: green } }"
+  let input = "sequence: [ one, two, ]\nmapping: { sky: blue, sea: green }"
 
   assert yum.parse(input)
     == Mapping([
@@ -92,10 +174,50 @@ pub fn example_6_4_line_prefixes_test() {
 }
 
 pub fn example_6_5_empty_lines_test() {
-  let input = "{ Folding: \"Empty line\n   \t\n  as a line feed\" }"
+  let input = "Folding: \"Empty line\n   \t\n  as a line feed\""
 
   assert yum.parse(input)
     == Mapping([#(String("Folding"), String("Empty line\nas a line feed"))])
+    |> Ok
+}
+
+pub fn example_2_19_integers_test() {
+  let input = "canonical: 12345\ndecimal: +12345\noctal: 0o14\nhexadecimal: 0xC"
+
+  assert yum.parse(input)
+    == Mapping([
+      #(String("canonical"), Int(12_345)),
+      #(String("decimal"), Int(12_345)),
+      #(String("octal"), Int(12)),
+      #(String("hexadecimal"), Int(12)),
+    ])
+    |> Ok
+}
+
+pub fn example_2_20_floating_point_test() {
+  let input =
+    "canonical: 1.23015e+3\nexponential: 12.3015e+02\nfixed: 1230.15\nnegative infinity: -.inf\nnot a number: .nan"
+
+  assert yum.parse(input)
+    == Mapping([
+      #(String("canonical"), Float(1230.15)),
+      #(String("exponential"), Float(1230.15)),
+      #(String("fixed"), Float(1230.15)),
+      #(String("negative infinity"), NegInf),
+      #(String("not a number"), Nan),
+    ])
+    |> Ok
+}
+
+pub fn example_2_21_miscellaneous_test() {
+  let input = "null:\nbooleans: [ true, false ]\nstring: '012345'"
+
+  assert yum.parse(input)
+    == Mapping([
+      #(Null, Null),
+      #(String("booleans"), Sequence([Bool(True), Bool(False)])),
+      #(String("string"), String("012345")),
+    ])
     |> Ok
 }
 

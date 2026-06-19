@@ -5,5 +5,5 @@ import yaml/parser/block_collection
 import yaml/token.{type Token}
 
 pub fn parser() -> Parser(Yaml, Token, Context) {
-  block_collection.sequence_parser()
+  block_collection.mapping_parser()
 }

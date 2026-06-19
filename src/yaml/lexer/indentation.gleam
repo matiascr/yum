@@ -12,11 +12,13 @@ pub fn lexer() -> Matcher(Token, Context) {
     "\n" <> _, "\t" -> lexer.Skip
     "\n" <> _, "\n" -> lexer.Drop(ctx)
     "\n" <> _, "" -> lexer.Drop(ctx)
-    "\n" <> spaces, _ ->
-      spaces
-      |> string.length()
+    "\n" <> spaces, _ -> {
+      let indent = string.length(spaces)
+
+      indent
       |> token.Indentation
-      |> lexer.Keep(context.BlockStyle(indent: string.length(spaces)))
+      |> lexer.Keep(context.FlowStyle(prev: context.BlockStyle(indent: indent)))
+    }
 
     "-", " " | "-", "\n" | "-", "" -> {
       let indent = current_indent(ctx)
