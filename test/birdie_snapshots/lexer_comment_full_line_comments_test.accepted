@@ -1,0 +1,19 @@
+---
+version: 2.0.1
+title: lexer:comment:full_line_comments_test
+---
+Input:
+
+```yaml
+# top
+one: two
+# bottom
+three: four
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[Indentation(0), MappingKey("one"), PlainScalar("two"), Indentation(0), MappingKey("three"), PlainScalar("four")]
+
+```

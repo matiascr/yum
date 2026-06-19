@@ -1,0 +1,18 @@
+---
+version: 2.0.1
+title: lexer:comment:flow_comments_test
+---
+Input:
+
+```yaml
+[one, # first
+two, {three: four # inner
+}]
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[OpenSequence, PlainScalar("one"), Comma, PlainScalar("two"), Comma, OpenMapping, MappingKey("three"), PlainScalar("four"), CloseMapping, CloseSequence]
+
+```

@@ -1,0 +1,19 @@
+---
+version: 2.0.1
+title: lexer:comment:hash_inside_scalars_test
+---
+Input:
+
+```yaml
+plain: foo#bar
+single: 'foo # bar'
+double: "foo # bar"
+trimmed: foo # bar
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[MappingKey("plain"), PlainScalar("foo#bar"), Indentation(0), MappingKey("single"), SingleQuote, SingleQuotedScalar("foo # bar"), Indentation(0), MappingKey("double"), DoubleQuote, DoubleQuotedScalar("foo # bar"), DoubleQuote, Indentation(0), MappingKey("trimmed"), PlainScalar("foo")]
+
+```

@@ -1,6 +1,7 @@
 import gleam/result
 import nibble/lexer.{type Lexer}
 import yaml/error.{type YamlError}
+import yaml/lexer/comment
 import yaml/lexer/context.{type Context}
 import yaml/lexer/double_quoted_scalar
 import yaml/lexer/flow_mapping
@@ -22,13 +23,24 @@ fn lexer() -> Lexer(Token, Context) {
   lexer.advanced(fn(ctx) {
     case ctx {
       context.BlockStyle(_) -> [
+        comment.lexer(),
         indentation.lexer(),
       ]
 
       // Flow Style Productions
-      context.FlowStyle(prev: _) -> [indentation.lexer(), plain_scalar.lexer()]
-      context.FlowMapping(prev: _) -> [flow_mapping.lexer()]
-      context.FlowSequence(prev: _) -> [flow_sequence.lexer()]
+      context.FlowStyle(prev: _) -> [
+        comment.lexer(),
+        indentation.lexer(),
+        plain_scalar.lexer(),
+      ]
+      context.FlowMapping(prev: _) -> [
+        comment.lexer(),
+        flow_mapping.lexer(),
+      ]
+      context.FlowSequence(prev: _) -> [
+        comment.lexer(),
+        flow_sequence.lexer(),
+      ]
       context.DoubleQuotedScalar(prev: _) -> [double_quoted_scalar.lexer()]
       context.SingleQuotedScalar(prev: _) -> [single_quoted_scalar.lexer()]
       context.DoubleQuotedEscape(prev: _) -> [

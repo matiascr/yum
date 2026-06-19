@@ -1,0 +1,18 @@
+---
+version: 2.0.1
+title: parser:comment:trailing_block_comments_test
+---
+Input:
+
+```yaml
+one: two # trailing
+three: # omitted
+four: item # scalar
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([#(String("one"), String("two")), #(String("three"), Null), #(String("four"), String("item"))])
+
+```

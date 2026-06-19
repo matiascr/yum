@@ -1,0 +1,18 @@
+---
+version: 2.0.1
+title: lexer:comment:trailing_block_comments_test
+---
+Input:
+
+```yaml
+one: two # trailing
+three: # omitted
+- item # sequence
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[MappingKey("one"), PlainScalar("two"), Indentation(0), MappingKey("three"), Indentation(0), Hyphen, PlainScalar("item")]
+
+```

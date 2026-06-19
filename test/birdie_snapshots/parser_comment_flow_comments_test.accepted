@@ -1,0 +1,18 @@
+---
+version: 2.0.1
+title: parser:comment:flow_comments_test
+---
+Input:
+
+```yaml
+[one, # first
+two, {three: four # inner
+}]
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Sequence([String("one"), String("two"), Mapping([#(String("three"), String("four"))])])
+
+```

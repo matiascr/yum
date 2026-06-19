@@ -15,6 +15,11 @@ pub fn lexer() -> Matcher(Token, Context) {
     "\"", _ -> token.DoubleQuote |> lexer.Keep(context.DoubleQuotedScalar(ctx))
     "'", _ -> token.SingleQuote |> lexer.Keep(context.SingleQuotedScalar(ctx))
 
+    _, "#" ->
+      case ends_with_whitespace(lexeme) {
+        True -> keep_plain_scalar(lexeme)(prev)
+        False -> lexer.Skip
+      }
     _, " " | _, "\t" | _, "\r" ->
       case string.ends_with(lexeme, ":") {
         True -> keep_mapping_key(lexeme)(ctx)
@@ -32,6 +37,13 @@ pub fn lexer() -> Matcher(Token, Context) {
       }
     _, _ -> lexer.Skip
   }
+}
+
+fn ends_with_whitespace(s: String) -> Bool {
+  string.ends_with(s, " ")
+  || string.ends_with(s, "\t")
+  || string.ends_with(s, "\r")
+  || string.ends_with(s, "\n")
 }
 
 fn keep_mapping_key(lexeme: String) {

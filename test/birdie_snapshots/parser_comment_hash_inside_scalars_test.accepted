@@ -1,0 +1,19 @@
+---
+version: 2.0.1
+title: parser:comment:hash_inside_scalars_test
+---
+Input:
+
+```yaml
+plain: foo#bar
+single: 'foo # bar'
+double: "foo # bar"
+trimmed: foo # bar
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([#(String("plain"), String("foo#bar")), #(String("single"), String("foo # bar")), #(String("double"), String("foo # bar")), #(String("trimmed"), String("foo"))])
+
+```

@@ -1,0 +1,19 @@
+---
+version: 2.0.1
+title: parser:comment:full_line_comments_test
+---
+Input:
+
+```yaml
+# top
+one: two
+# bottom
+three: four
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([#(String("one"), String("two")), #(String("three"), String("four"))])
+
+```
