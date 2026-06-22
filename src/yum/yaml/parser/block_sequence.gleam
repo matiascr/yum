@@ -1,14 +1,14 @@
 import gleam/option
 import nibble.{type Parser, do, return}
-import yaml.{type Yaml}
-import yaml/lexer/context.{type Context}
-import yaml/parser/indentation
-import yaml/token.{type Token}
+import yum/yaml/ast.{type YamlAST} as yaml
+import yum/yaml/lexer/context.{type Context}
+import yum/yaml/parser/indentation
+import yum/yaml/token.{type Token}
 
 pub fn parser(
   indent: Int,
-  node_parser: fn(Int) -> Parser(Yaml, Token, Context),
-) -> Parser(Yaml, Token, Context) {
+  node_parser: fn(Int) -> Parser(YamlAST, Token, Context),
+) -> Parser(YamlAST, Token, Context) {
   use entries <- do(nibble.sequence(
     sequence_entry_parser(indent, node_parser),
     separator: indentation.block_separator_parser(indent),
@@ -25,8 +25,8 @@ pub fn parser(
 
 fn sequence_entry_parser(
   indent: Int,
-  node_parser: fn(Int) -> Parser(Yaml, Token, Context),
-) -> Parser(Yaml, Token, Context) {
+  node_parser: fn(Int) -> Parser(YamlAST, Token, Context),
+) -> Parser(YamlAST, Token, Context) {
   use _ <- do(nibble.token(token.Hyphen))
   use value <- do(nibble.optional(node_parser(indent)))
 

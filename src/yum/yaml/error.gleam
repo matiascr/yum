@@ -1,7 +1,13 @@
+//// Errors returned by YAML parsing.
+////
+//// Import this module when you need to pattern match on parsing failures from
+//// [`yum/yaml.parse`](../yaml.html#parse) or [`yum/yaml.parse_ast`](../yaml.html#parse_ast).
+////
+
 import nibble
 import nibble/lexer
-import yaml/lexer/context.{type Context}
-import yaml/token.{type Token}
+import yum/yaml/lexer/context.{type Context}
+import yum/yaml/token.{type Token}
 
 pub type YamlError {
   IndentNormalizationError

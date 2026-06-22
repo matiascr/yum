@@ -1,7 +1,7 @@
 import gleam/option.{None, Some}
 import nibble.{type Parser, do, return}
-import yaml/lexer/context.{type Context}
-import yaml/token.{type Token}
+import yum/yaml/lexer/context.{type Context}
+import yum/yaml/token.{type Token}
 
 pub fn value_parser() -> Parser(Int, Token, Context) {
   use tok <- nibble.take_map("Expected an indentation")

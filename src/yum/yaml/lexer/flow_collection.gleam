@@ -1,8 +1,8 @@
 import gleam/list
 import gleam/string
 import nibble/lexer
-import yaml/lexer/context.{type Context}
-import yaml/token
+import yum/yaml/lexer/context.{type Context}
+import yum/yaml/token
 
 pub fn ends_with_whitespace(s: String) -> Bool {
   string.ends_with(s, " ")

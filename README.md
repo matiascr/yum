@@ -7,10 +7,10 @@
 gleam add yum@1
 ```
 ```gleam
-import yum
+import yum/yaml
 
-pub fn main() -> Nil {
-  // TODO: An example of the project in use
+pub fn parse_document(input: String) {
+  yaml.parse(input)
 }
 ```
 

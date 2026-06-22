@@ -1,12 +1,12 @@
 import gleam/option.{None, Some}
 import gleam/string
 import nibble.{type Parser, do, return}
-import yaml.{type Yaml}
-import yaml/lexer/context.{type Context}
-import yaml/parser/double_quoted
-import yaml/token.{type Token}
+import yum/yaml/ast.{type YamlAST} as yaml
+import yum/yaml/lexer/context.{type Context}
+import yum/yaml/parser/double_quoted
+import yum/yaml/token.{type Token}
 
-pub fn parser() -> Parser(Yaml, Token, Context) {
+pub fn parser() -> Parser(YamlAST, Token, Context) {
   use _ <- do(nibble.token(token.SingleQuote))
   use parts <- do(
     nibble.many({

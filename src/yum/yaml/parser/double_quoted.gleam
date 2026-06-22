@@ -5,9 +5,9 @@ import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
 import nibble.{type Parser, do, return}
-import yaml.{type Yaml}
-import yaml/lexer/context.{type Context}
-import yaml/token.{type Token}
+import yum/yaml/ast.{type YamlAST} as yaml
+import yum/yaml/lexer/context.{type Context}
+import yum/yaml/token.{type Token}
 
 /// Raw text and escape tokens need different folding rules, especially around
 /// escaped line breaks.
@@ -17,7 +17,7 @@ type DoubleQuotedElement {
   EscapedLineBreak
 }
 
-pub fn parser() -> Parser(Yaml, Token, Context) {
+pub fn parser() -> Parser(YamlAST, Token, Context) {
   use _ <- do(nibble.token(token.DoubleQuote))
   use elements <- do(
     nibble.many({

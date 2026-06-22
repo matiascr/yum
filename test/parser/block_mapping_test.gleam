@@ -1,7 +1,7 @@
 import birdie
 import gleam/result
 import gleam/string
-import yum
+import yum/yaml
 
 const test_file_prefix = "parser:block_mapping:"
 
@@ -9,7 +9,7 @@ pub fn simple_block_mapping_test() {
   let input = "one: two\nthree: four"
 
   input
-  |> yum.parse()
+  |> yaml.parse_ast()
   |> snap(input, "simple_block_mapping_test")
 }
 
@@ -17,7 +17,7 @@ pub fn omitted_values_block_mapping_test() {
   let input = "empty:\nexplicit null: null\nempty again:"
 
   input
-  |> yum.parse()
+  |> yaml.parse_ast()
   |> snap(input, "omitted_values_block_mapping_test")
 }
 
@@ -26,7 +26,7 @@ pub fn mixed_nodes_block_mapping_test() {
     "null: null\ntrue: true\nnumber: 123\nsequence: [one, two]\nmapping: {key: value}\ndouble: \"double quoted\"\nsingle: 'single quoted'"
 
   input
-  |> yum.parse()
+  |> yaml.parse_ast()
   |> snap(input, "mixed_nodes_block_mapping_test")
 }
 
@@ -35,7 +35,7 @@ pub fn nested_collections_block_mapping_test() {
     "outer:\n  inner: value\n  list:\n    - one\n    - two\nsibling: done"
 
   input
-  |> yum.parse()
+  |> yaml.parse_ast()
   |> snap(input, "nested_collections_block_mapping_test")
 }
 
@@ -44,7 +44,7 @@ pub fn urls_and_colons_block_mapping_test() {
     "url: https://example.com/foo#bar\nhttps://example.com/foo: value\nliteral: not:a key"
 
   input
-  |> yum.parse()
+  |> yaml.parse_ast()
   |> snap(input, "urls_and_colons_block_mapping_test")
 }
 
@@ -52,7 +52,7 @@ pub fn block_sequence_of_block_mappings_test() {
   let input = "-\n  name: Mark\n  hr: 65\n-\n  name: Sammy\n  hr: 63"
 
   input
-  |> yum.parse()
+  |> yaml.parse_ast()
   |> snap(input, "block_sequence_of_block_mappings_test")
 }
 

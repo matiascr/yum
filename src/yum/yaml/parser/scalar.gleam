@@ -5,11 +5,11 @@ import gleam/regexp
 import gleam/result
 import gleam/string
 import nibble.{type Parser}
-import yaml.{type Yaml}
-import yaml/lexer/context.{type Context}
-import yaml/token.{type Token}
+import yum/yaml/ast.{type YamlAST} as yaml
+import yum/yaml/lexer/context.{type Context}
+import yum/yaml/token.{type Token}
 
-pub fn parser() -> Parser(Yaml, Token, Context) {
+pub fn parser() -> Parser(YamlAST, Token, Context) {
   use tok <- nibble.take_map("Expected a value")
   case tok {
     token.SingleQuotedScalar(value:) | token.PlainScalar(value:) -> parse(value)
@@ -42,7 +42,7 @@ pub fn parser() -> Parser(Yaml, Token, Context) {
   }
 }
 
-pub fn parse(value: String) -> Option(Yaml) {
+pub fn parse(value: String) -> Option(YamlAST) {
   value
   |> parse_null()
   |> option.or(parse_bool(value))
@@ -57,7 +57,7 @@ pub fn parse(value: String) -> Option(Yaml) {
 
 const null_regex = "^(null|Null|NULL|~)$"
 
-fn parse_null(input: String) -> Option(Yaml) {
+fn parse_null(input: String) -> Option(YamlAST) {
   let assert Ok(regex) = regexp.from_string(null_regex)
   case regexp.check(with: regex, content: input) {
     True -> Some(yaml.Null)
@@ -67,7 +67,7 @@ fn parse_null(input: String) -> Option(Yaml) {
 
 const bool_regex = "^(true|True|TRUE|false|False|FALSE)$"
 
-fn parse_bool(input: String) -> Option(Yaml) {
+fn parse_bool(input: String) -> Option(YamlAST) {
   let assert Ok(regex) = regexp.from_string(bool_regex)
   case regexp.check(with: regex, content: input) {
     True -> {
@@ -84,7 +84,7 @@ fn parse_bool(input: String) -> Option(Yaml) {
 
 const int_regex = "^[-+]?[0-9]+$"
 
-fn parse_int(input: String) -> Option(Yaml) {
+fn parse_int(input: String) -> Option(YamlAST) {
   let assert Ok(regex) = regexp.from_string(int_regex)
   case regexp.check(with: regex, content: input) {
     True -> {
@@ -102,7 +102,7 @@ fn parse_int(input: String) -> Option(Yaml) {
 
 const octal_regex = "^0o[0-7]+$"
 
-fn parse_octal(input: String) -> Option(Yaml) {
+fn parse_octal(input: String) -> Option(YamlAST) {
   let assert Ok(regex) = regexp.from_string(octal_regex)
   case regexp.check(with: regex, content: input) {
     True -> {
@@ -121,7 +121,7 @@ fn parse_octal(input: String) -> Option(Yaml) {
 
 const hexadecimal_regex = "^0x[0-9a-fA-F]+$"
 
-fn parse_hexadecimal(input: String) -> Option(Yaml) {
+fn parse_hexadecimal(input: String) -> Option(YamlAST) {
   let assert Ok(regex) = regexp.from_string(hexadecimal_regex)
   case regexp.check(with: regex, content: input) {
     True -> {
@@ -182,7 +182,7 @@ fn parse_float(input: String) {
 
 const inf_regex = "^[-+]?(\\.inf|\\.Inf|\\.INF)$"
 
-fn parse_inf(input: String) -> Option(Yaml) {
+fn parse_inf(input: String) -> Option(YamlAST) {
   let assert Ok(regex) = regexp.from_string(inf_regex)
   case regexp.check(with: regex, content: input) {
     True ->
@@ -197,7 +197,7 @@ fn parse_inf(input: String) -> Option(Yaml) {
 
 const nan_regex = "^(\\.nan|\\.NaN|\\.NAN)$"
 
-fn parse_nan(input: String) -> Option(Yaml) {
+fn parse_nan(input: String) -> Option(YamlAST) {
   let assert Ok(regex) = regexp.from_string(nan_regex)
   case regexp.check(with: regex, content: input) {
     True -> Some(yaml.Nan)

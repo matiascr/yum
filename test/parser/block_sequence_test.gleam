@@ -1,7 +1,7 @@
 import birdie
 import gleam/result
 import gleam/string
-import yum
+import yum/yaml
 
 const test_file_prefix = "parser:block_sequence:"
 
@@ -9,7 +9,7 @@ pub fn simple_block_sequence_test() {
   let input = "- one\n- two\n- three"
 
   input
-  |> yum.parse()
+  |> yaml.parse_ast()
   |> snap(input, "simple_block_sequence_test")
 }
 
@@ -17,7 +17,7 @@ pub fn trailing_line_break_block_sequence_test() {
   let input = "- one\n- two\n"
 
   input
-  |> yum.parse()
+  |> yaml.parse_ast()
   |> snap(input, "trailing_line_break_block_sequence_test")
 }
 
@@ -25,7 +25,7 @@ pub fn blank_lines_block_sequence_test() {
   let input = "- one\n\n- two\n\n\n- three"
 
   input
-  |> yum.parse()
+  |> yaml.parse_ast()
   |> snap(input, "blank_lines_block_sequence_test")
 }
 
@@ -33,7 +33,7 @@ pub fn empty_entries_block_sequence_test() {
   let input = "-\n- two\n-"
 
   input
-  |> yum.parse()
+  |> yaml.parse_ast()
   |> snap(input, "empty_entries_block_sequence_test")
 }
 
@@ -41,7 +41,7 @@ pub fn nested_block_sequence_test() {
   let input = "-\n  - one\n  - two\n- three"
 
   input
-  |> yum.parse()
+  |> yaml.parse_ast()
   |> snap(input, "nested_block_sequence_test")
 }
 
@@ -50,7 +50,7 @@ pub fn mixed_nodes_block_sequence_test() {
     "- null\n- true\n- 123\n- [one, two]\n- {key: value}\n- \"double quoted\"\n- 'single quoted'"
 
   input
-  |> yum.parse()
+  |> yaml.parse_ast()
   |> snap(input, "mixed_nodes_block_sequence_test")
 }
 
@@ -58,7 +58,7 @@ pub fn dash_inside_scalar_block_sequence_test() {
   let input = "- one-two\n- --not an entry marker"
 
   input
-  |> yum.parse()
+  |> yaml.parse_ast()
   |> snap(input, "dash_inside_scalar_block_sequence_test")
 }
 

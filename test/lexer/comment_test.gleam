@@ -3,9 +3,9 @@ import gleam/list
 import gleam/result
 import gleam/string
 import nibble/lexer
-import yaml/error.{type YamlError}
-import yaml/lexer as yaml_lexer
-import yaml/token.{type Token}
+import yum/yaml/error.{type YamlError}
+import yum/yaml/lexer as yum_yaml_lexer
+import yum/yaml/token.{type Token}
 
 const test_file_prefix = "lexer:comment:"
 
@@ -13,7 +13,7 @@ pub fn full_line_comments_test() {
   let input = "# top\none: two\n# bottom\nthree: four"
 
   input
-  |> yaml_lexer.lex()
+  |> yum_yaml_lexer.lex()
   |> snap(input, "full_line_comments_test")
 }
 
@@ -21,7 +21,7 @@ pub fn trailing_block_comments_test() {
   let input = "one: two # trailing\nthree: # omitted\n- item # sequence"
 
   input
-  |> yaml_lexer.lex()
+  |> yum_yaml_lexer.lex()
   |> snap(input, "trailing_block_comments_test")
 }
 
@@ -29,7 +29,7 @@ pub fn flow_comments_test() {
   let input = "[one, # first\ntwo, {three: four # inner\n}]"
 
   input
-  |> yaml_lexer.lex()
+  |> yum_yaml_lexer.lex()
   |> snap(input, "flow_comments_test")
 }
 
@@ -38,7 +38,7 @@ pub fn hash_inside_scalars_test() {
     "plain: foo#bar\nsingle: 'foo # bar'\ndouble: \"foo # bar\"\ntrimmed: foo # bar"
 
   input
-  |> yaml_lexer.lex()
+  |> yum_yaml_lexer.lex()
   |> snap(input, "hash_inside_scalars_test")
 }
 

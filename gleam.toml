@@ -1,5 +1,12 @@
 name = "yum"
 version = "1.0.0"
+internal_modules = [
+  "yum/yaml/lexer",
+  "yum/yaml/lexer/*",
+  "yum/yaml/parser",
+  "yum/yaml/parser/*",
+  "yum/yaml/token",
+]
 
 # Fill out these fields if you intend to generate HTML documentation or publish
 # your project to the Hex package manager.

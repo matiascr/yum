@@ -1,15 +1,15 @@
 import gleam/result
 import nibble/lexer.{type Lexer}
-import yaml/error.{type YamlError}
-import yaml/lexer/comment
-import yaml/lexer/context.{type Context}
-import yaml/lexer/double_quoted_scalar
-import yaml/lexer/flow_mapping
-import yaml/lexer/flow_sequence
-import yaml/lexer/indentation
-import yaml/lexer/plain_scalar
-import yaml/lexer/single_quoted_scalar
-import yaml/token.{type Token}
+import yum/yaml/error.{type YamlError}
+import yum/yaml/lexer/comment
+import yum/yaml/lexer/context.{type Context}
+import yum/yaml/lexer/double_quoted_scalar
+import yum/yaml/lexer/flow_mapping
+import yum/yaml/lexer/flow_sequence
+import yum/yaml/lexer/indentation
+import yum/yaml/lexer/plain_scalar
+import yum/yaml/lexer/single_quoted_scalar
+import yum/yaml/token.{type Token}
 
 pub fn lex(input: String) -> Result(List(lexer.Token(Token)), YamlError) {
   let initial_context: Context = context.FlowStyle(prev: context.BlockStyle(0))

@@ -1,6 +1,6 @@
 import nibble/lexer.{type Matcher}
-import yaml/lexer/context.{type Context}
-import yaml/token.{type Token}
+import yum/yaml/lexer/context.{type Context}
+import yum/yaml/token.{type Token}
 
 pub fn lexer() -> Matcher(Token, Context) {
   use ctx, lexeme, lookahead <- lexer.custom()
