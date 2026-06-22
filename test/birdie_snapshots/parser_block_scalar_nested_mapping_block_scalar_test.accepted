@@ -1,0 +1,20 @@
+---
+version: 2.0.1
+title: parser:block_scalar:nested_mapping_block_scalar_test
+---
+Input:
+
+```yaml
+outer:
+  literal: |
+    line one
+    line two
+  next: value
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([#(String("outer"), Mapping([#(String("literal"), String("line one\nline two\n")), #(String("next"), String("value"))]))])
+
+```

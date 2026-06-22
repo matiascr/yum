@@ -1,0 +1,20 @@
+---
+version: 2.0.1
+title: lexer:block_scalar:preserves_extra_indentation_block_scalar_test
+---
+Input:
+
+```yaml
+|
+  line one
+    indented
+  line three
+
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[BlockScalarHeader(Literal, Clip, 0), BlockScalarLine(2, "line one"), BlockScalarLine(4, "indented"), BlockScalarLine(2, "line three")]
+
+```

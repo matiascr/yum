@@ -1,6 +1,7 @@
 import gleam/result
 import nibble/lexer.{type Lexer}
 import yum/yaml/error.{type YamlError}
+import yum/yaml/lexer/block_scalar
 import yum/yaml/lexer/comment
 import yum/yaml/lexer/context.{type Context}
 import yum/yaml/lexer/double_quoted_scalar
@@ -41,6 +42,7 @@ fn lexer() -> Lexer(Token, Context) {
         comment.lexer(),
         flow_sequence.lexer(),
       ]
+      context.BlockScalar(prev: _, parent_indent: _) -> [block_scalar.lexer()]
       context.DoubleQuotedScalar(prev: _) -> [double_quoted_scalar.lexer()]
       context.SingleQuotedScalar(prev: _) -> [single_quoted_scalar.lexer()]
       context.DoubleQuotedEscape(prev: _) -> [

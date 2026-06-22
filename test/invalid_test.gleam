@@ -53,6 +53,14 @@ pub fn explicit_block_mapping_value_at_wrong_indent_fails_test() {
   assert_fails("?\n  left: one\n : mapping key")
 }
 
+pub fn top_level_block_scalar_unindented_content_fails_test() {
+  assert_fails("|\nnot content")
+}
+
+pub fn mapping_block_scalar_unindented_content_fails_test() {
+  assert_fails("key: |\nvalue")
+}
+
 fn assert_fails(input: String) {
   assert input |> yaml.parse_ast() |> result.is_error()
 }

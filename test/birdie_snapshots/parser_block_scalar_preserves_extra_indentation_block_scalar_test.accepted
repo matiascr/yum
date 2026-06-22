@@ -1,0 +1,20 @@
+---
+version: 2.0.1
+title: parser:block_scalar:preserves_extra_indentation_block_scalar_test
+---
+Input:
+
+```yaml
+|
+  line one
+    indented
+  line three
+
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+String("line one\n  indented\nline three\n")
+
+```

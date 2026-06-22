@@ -3,6 +3,7 @@ import nibble.{type Parser, do}
 import yum/yaml/ast.{type YamlAST}
 import yum/yaml/lexer/context.{type Context}
 import yum/yaml/parser/block_mapping
+import yum/yaml/parser/block_scalar
 import yum/yaml/parser/block_sequence
 import yum/yaml/parser/double_quoted
 import yum/yaml/parser/flow_collection
@@ -55,6 +56,7 @@ fn indentless_sequence_parser(
 fn block_node_parser(indent: Int) -> Parser(YamlAST, Token, Context) {
   nibble.one_of([
     flow_collection.parser(),
+    block_scalar.parser(),
     double_quoted.parser(),
     single_quoted.parser(),
     nibble.backtrackable(compact_collection_parser(indent)),
@@ -66,6 +68,7 @@ fn block_node_parser(indent: Int) -> Parser(YamlAST, Token, Context) {
 fn mapping_value_parser(indent: Int) -> Parser(YamlAST, Token, Context) {
   nibble.one_of([
     flow_collection.parser(),
+    block_scalar.parser(),
     double_quoted.parser(),
     single_quoted.parser(),
     nibble.backtrackable(compact_collection_parser(indent)),

@@ -1,0 +1,21 @@
+---
+version: 2.0.1
+title: parser:block_scalar:folded_clip_block_scalar_test
+---
+Input:
+
+```yaml
+>
+  line one
+  line two
+
+  line four
+
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+String("line one line two\nline four\n")
+
+```

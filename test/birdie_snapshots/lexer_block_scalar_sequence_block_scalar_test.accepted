@@ -1,0 +1,21 @@
+---
+version: 2.0.1
+title: lexer:block_scalar:sequence_block_scalar_test
+---
+Input:
+
+```yaml
+- |
+  first
+  second
+- >-
+  third
+  fourth
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[Hyphen, BlockScalarHeader(Literal, Clip, 0), BlockScalarLine(2, "first"), BlockScalarLine(2, "second"), Indentation(0), Hyphen, BlockScalarHeader(Folded, Strip, 0), BlockScalarLine(2, "third"), BlockScalarLine(2, "fourth")]
+
+```

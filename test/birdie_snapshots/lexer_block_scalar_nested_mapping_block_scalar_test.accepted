@@ -1,0 +1,20 @@
+---
+version: 2.0.1
+title: lexer:block_scalar:nested_mapping_block_scalar_test
+---
+Input:
+
+```yaml
+outer:
+  literal: |
+    line one
+    line two
+  next: value
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[MappingKey("outer"), Indentation(2), MappingKey("literal"), BlockScalarHeader(Literal, Clip, 2), BlockScalarLine(4, "line one"), BlockScalarLine(4, "line two"), Indentation(2), MappingKey("next"), PlainScalar("value")]
+
+```

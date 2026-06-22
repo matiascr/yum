@@ -1,0 +1,21 @@
+---
+version: 2.0.1
+title: lexer:block_scalar:folded_clip_block_scalar_test
+---
+Input:
+
+```yaml
+>
+  line one
+  line two
+
+  line four
+
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[BlockScalarHeader(Folded, Clip, 0), BlockScalarLine(2, "line one"), BlockScalarLine(2, "line two"), BlockScalarLine(0, ""), BlockScalarLine(2, "line four")]
+
+```

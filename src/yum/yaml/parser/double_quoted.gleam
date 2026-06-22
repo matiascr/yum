@@ -25,32 +25,7 @@ pub fn parser() -> Parser(YamlAST, Token, Context) {
       case token {
         token.DoubleQuotedScalar(value:) -> Some(Raw(value))
         token.Escape(value:) -> parse_escape(value)
-
-        token.Hyphen
-        | token.QuestionMark
-        | token.Colon
-        | token.Comma
-        | token.OpenSequence
-        | token.CloseSequence
-        | token.OpenMapping
-        | token.CloseMapping
-        | token.Hash
-        | token.Ampersand
-        | token.Asterisk
-        | token.Exclamation
-        | token.VerticalBar
-        | token.GreaterThan
-        | token.SingleQuote
-        | token.DoubleQuote
-        | token.Percent
-        | token.At
-        | token.GraveAccent
-        | token.LineBreak
-        | token.Indentation(_)
-        | token.SingleQuotedScalar(_)
-        | token.MappingKey(_)
-        | token.PlainScalar(_)
-        | token.InvalidEscape -> None
+        _ -> None
       }
     }),
   )

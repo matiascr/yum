@@ -37,6 +37,7 @@ fn current_indent(ctx: Context) -> Int {
     context.FlowStyle(prev:)
     | context.FlowMapping(prev:)
     | context.FlowSequence(prev:)
+    | context.BlockScalar(prev:, parent_indent: _)
     | context.DoubleQuotedScalar(prev:)
     | context.SingleQuotedScalar(prev:)
     | context.DoubleQuotedEscape(prev:) -> current_indent(prev)

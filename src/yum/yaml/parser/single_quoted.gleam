@@ -36,9 +36,11 @@ pub fn parser() -> Parser(YamlAST, Token, Context) {
         | token.LineBreak
         | token.Indentation(_)
         | token.DoubleQuotedScalar(_)
-        | token.Escape(_)
         | token.MappingKey(_)
         | token.PlainScalar(_)
+        | token.BlockScalarHeader(_, _, _)
+        | token.BlockScalarLine(_, _)
+        | token.Escape(_)
         | token.InvalidEscape -> None
       }
     }),

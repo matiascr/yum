@@ -1,0 +1,19 @@
+---
+version: 2.0.1
+title: parser:block_scalar:literal_clip_block_scalar_test
+---
+Input:
+
+```yaml
+|
+  line one
+  line two
+
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+String("line one\nline two\n")
+
+```

@@ -5,6 +5,7 @@ import yum/yaml/ast.{type YamlAST}
 import yum/yaml/error.{type YamlError}
 import yum/yaml/lexer/context.{type Context}
 import yum/yaml/parser/block_collection
+import yum/yaml/parser/block_scalar
 import yum/yaml/parser/double_quoted
 import yum/yaml/parser/flow_collection
 import yum/yaml/parser/indentation
@@ -29,6 +30,7 @@ fn parser() -> Parser(YamlAST, Token, Context) {
 fn default_parser() -> Parser(YamlAST, Token, Context) {
   nibble.one_of([
     block_collection.parser(),
+    block_scalar.parser(),
     flow_collection.parser(),
     double_quoted.parser(),
     single_quoted.parser(),

@@ -1,3 +1,14 @@
+pub type BlockScalarStyle {
+  Literal
+  Folded
+}
+
+pub type Chomp {
+  Clip
+  Strip
+  Keep
+}
+
 pub type Token {
 
   // Block Structure Indicators ================================================
@@ -64,6 +75,8 @@ pub type Token {
   SingleQuotedScalar(value: String)
   MappingKey(value: String)
   PlainScalar(value: String)
+  BlockScalarHeader(style: BlockScalarStyle, chomp: Chomp, parent_indent: Int)
+  BlockScalarLine(indent: Int, content: String)
   Escape(value: String)
   InvalidEscape
 }

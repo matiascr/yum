@@ -1,0 +1,19 @@
+---
+version: 2.0.1
+title: lexer:block_scalar:literal_clip_block_scalar_test
+---
+Input:
+
+```yaml
+|
+  line one
+  line two
+
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[BlockScalarHeader(Literal, Clip, 0), BlockScalarLine(2, "line one"), BlockScalarLine(2, "line two")]
+
+```

@@ -1,0 +1,21 @@
+---
+version: 2.0.1
+title: parser:block_scalar:sequence_block_scalar_test
+---
+Input:
+
+```yaml
+- |
+  first
+  second
+- >-
+  third
+  fourth
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Sequence([String("first\nsecond\n"), String("third fourth")])
+
+```

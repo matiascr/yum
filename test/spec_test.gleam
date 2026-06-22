@@ -205,6 +205,22 @@ pub fn example_6_5_empty_lines_test() {
     |> Ok
 }
 
+pub fn example_2_16_block_scalars_test() {
+  let input =
+    "name: Mark McGwire\naccomplishment: >\n  Mark set a major league\n  home run record in 1998.\nstats: |\n  65 Home Runs\n  0.278 Batting Average"
+
+  assert yaml.parse_ast(input)
+    == Mapping([
+      #(String("name"), String("Mark McGwire")),
+      #(
+        String("accomplishment"),
+        String("Mark set a major league home run record in 1998.\n"),
+      ),
+      #(String("stats"), String("65 Home Runs\n0.278 Batting Average\n")),
+    ])
+    |> Ok
+}
+
 pub fn example_2_19_integers_test() {
   let input = "canonical: 12345\ndecimal: +12345\noctal: 0o14\nhexadecimal: 0xC"
 
