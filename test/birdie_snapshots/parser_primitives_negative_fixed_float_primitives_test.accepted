@@ -1,0 +1,14 @@
+---
+version: 2.0.1
+title: parser:primitives:negative_fixed_float_primitives_test
+---
+Input:
+
+-1230.15
+
+-----------------------------------------------------------------------
+
+```gleam
+Float(-1230.15)
+
+```

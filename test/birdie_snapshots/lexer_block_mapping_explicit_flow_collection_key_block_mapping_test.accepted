@@ -1,0 +1,17 @@
+---
+version: 2.0.1
+title: lexer:block_mapping:explicit_flow_collection_key_block_mapping_test
+---
+Input:
+
+```yaml
+? [one, two]
+: sequence key
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[QuestionMark, OpenSequence, PlainScalar("one"), Comma, PlainScalar("two"), CloseSequence, Indentation(0), Colon, PlainScalar("sequence key")]
+
+```

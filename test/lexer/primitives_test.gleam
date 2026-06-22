@@ -65,6 +65,14 @@ pub fn fixed_float_primitives_test() {
   |> snap(input, "fixed_float_primitives_test")
 }
 
+pub fn negative_fixed_float_primitives_test() {
+  let input = "-1230.15"
+
+  input
+  |> yum_yaml_lexer.lex()
+  |> snap(input, "negative_fixed_float_primitives_test")
+}
+
 pub fn negative_infinity_float_primitives_test() {
   let input = "-.inf"
 

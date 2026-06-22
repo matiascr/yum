@@ -1,0 +1,18 @@
+---
+version: 2.0.1
+title: parser:block_mapping:explicit_flow_mapping_key_nested_value_test
+---
+Input:
+
+```yaml
+? {left: [one, two], right: {nested: yes}}
+:
+  result: ok
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([#(Mapping([#(String("left"), Sequence([String("one"), String("two")])), #(String("right"), Mapping([#(String("nested"), String("yes"))]))]), Mapping([#(String("result"), String("ok"))]))])
+
+```

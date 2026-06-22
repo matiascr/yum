@@ -21,6 +21,7 @@ pub fn parse(tokens: List(lexer.Token(Token))) -> Result(YamlAST, YamlError) {
 fn parser() -> Parser(YamlAST, Token, Context) {
   use yaml <- do(default_parser())
   use _ <- do(nibble.many(indentation.value_parser()))
+  use _ <- do(nibble.eof())
 
   return(yaml)
 }

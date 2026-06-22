@@ -1,0 +1,17 @@
+---
+version: 2.0.1
+title: parser:block_mapping:explicit_scalar_key_block_mapping_test
+---
+Input:
+
+```yaml
+? name
+: Mark
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([#(String("name"), String("Mark"))])
+
+```

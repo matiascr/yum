@@ -1,0 +1,17 @@
+---
+version: 2.0.1
+title: lexer:block_mapping:implicit_quoted_key_block_mapping_test
+---
+Input:
+
+```yaml
+"quoted key":
+- entry
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[DoubleQuote, DoubleQuotedScalar("quoted key"), DoubleQuote, Colon, Indentation(0), Hyphen, PlainScalar("entry")]
+
+```

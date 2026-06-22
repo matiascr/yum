@@ -14,26 +14,30 @@ pub fn lexer() -> Matcher(Token, Context) {
     "[", _ -> token.OpenSequence |> lexer.Keep(context.FlowSequence(ctx))
     "\"", _ -> token.DoubleQuote |> lexer.Keep(context.DoubleQuotedScalar(ctx))
     "'", _ -> token.SingleQuote |> lexer.Keep(context.SingleQuotedScalar(ctx))
+    "?", " " | "?", "\t" | "?", "\r" | "?", "\n" | "?", "" ->
+      token.QuestionMark |> lexer.Keep(ctx)
+    ":", " " | ":", "\t" | ":", "\r" | ":", "\n" | ":", "" ->
+      token.Colon |> lexer.Keep(ctx)
 
     _, "#" ->
       case ends_with_whitespace(lexeme) {
-        True -> keep_plain_scalar(lexeme)(prev)
+        True -> plain_scalar(lexeme) |> lexer.Keep(prev)
         False -> lexer.Skip
       }
     _, " " | _, "\t" | _, "\r" ->
       case string.ends_with(lexeme, ":") {
-        True -> keep_mapping_key(lexeme)(ctx)
+        True -> mapping_key(lexeme) |> lexer.Keep(ctx)
         False -> lexer.Skip
       }
     _, "\n" ->
       case string.ends_with(lexeme, ":") {
-        True -> keep_mapping_key(lexeme)(ctx)
-        False -> keep_plain_scalar(lexeme)(prev)
+        True -> mapping_key(lexeme) |> lexer.Keep(ctx)
+        False -> plain_scalar(lexeme) |> lexer.Keep(prev)
       }
     _, "" ->
       case string.ends_with(lexeme, ":") {
-        True -> keep_mapping_key(lexeme)(ctx)
-        False -> keep_plain_scalar(lexeme)(prev)
+        True -> mapping_key(lexeme) |> lexer.Keep(ctx)
+        False -> plain_scalar(lexeme) |> lexer.Keep(prev)
       }
     _, _ -> lexer.Skip
   }
@@ -46,22 +50,16 @@ fn ends_with_whitespace(s: String) -> Bool {
   || string.ends_with(s, "\n")
 }
 
-fn keep_mapping_key(lexeme: String) {
-  let key =
-    lexeme
-    |> string.drop_end(1)
-    |> string.trim_end()
-    |> token.MappingKey
-
-  lexer.Keep(key, _)
+fn mapping_key(lexeme: String) {
+  lexeme
+  |> string.drop_end(1)
+  |> string.trim_end()
+  |> token.MappingKey
 }
 
-fn keep_plain_scalar(lexeme: String) {
-  let key =
-    lexeme
-    // Leading whitespace is already being dropped in the lexer
-    |> string.trim_end()
-    |> token.PlainScalar
-
-  lexer.Keep(key, _)
+fn plain_scalar(lexeme: String) {
+  lexeme
+  // Leading whitespace is already being dropped in the lexer
+  |> string.trim_end()
+  |> token.PlainScalar
 }

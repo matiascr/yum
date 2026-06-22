@@ -1,5 +1,5 @@
 import gleam/option
-import nibble.{type Parser, do, return}
+import nibble.{type Parser, do, or, return}
 import yum/yaml/ast.{type YamlAST} as yaml
 import yum/yaml/lexer/context.{type Context}
 import yum/yaml/parser/double_quoted
@@ -18,32 +18,43 @@ pub fn parser() -> Parser(YamlAST, Token, Context) {
 
 fn sequence_parser() -> Parser(YamlAST, Token, Context) {
   use _ <- do(nibble.token(token.OpenSequence))
-  use entries <- do(nibble.sequence(
-    nibble.optional(sequence_entry_parser()),
-    separator: nibble.token(token.Comma),
-  ))
+  use entries <- do(comma_separated(sequence_entry_parser()))
   use _ <- do(nibble.optional(nibble.token(token.Comma)))
   use _ <- do(nibble.token(token.CloseSequence))
 
   entries
-  |> option.values()
   |> yaml.Sequence
   |> return
 }
 
 fn mapping_parser() -> Parser(YamlAST, Token, Context) {
   use _ <- do(nibble.token(token.OpenMapping))
-  use entries <- do(nibble.sequence(
-    nibble.optional(mapping_entry_parser()),
-    separator: nibble.token(token.Comma),
-  ))
+  use entries <- do(comma_separated(mapping_entry_parser()))
   use _ <- do(nibble.optional(nibble.token(token.Comma)))
   use _ <- do(nibble.token(token.CloseMapping))
 
   entries
-  |> option.values()
   |> yaml.Mapping
   |> return
+}
+
+fn comma_separated(
+  parser: Parser(a, Token, Context),
+) -> Parser(List(a), Token, Context) {
+  {
+    use first <- do(parser)
+    use rest <- do(nibble.many(comma_then(parser)))
+    return([first, ..rest])
+  }
+  |> or([])
+}
+
+fn comma_then(parser: Parser(a, Token, Context)) -> Parser(a, Token, Context) {
+  {
+    use _ <- do(nibble.token(token.Comma))
+    parser
+  }
+  |> nibble.backtrackable
 }
 
 fn sequence_entry_parser() -> Parser(YamlAST, Token, Context) {
@@ -74,10 +85,8 @@ fn compact_empty_key_mapping_parser() -> Parser(YamlAST, Token, Context) {
 fn compact_plain_mapping_parser() -> Parser(YamlAST, Token, Context) {
   use key <- do(plain_mapping_key_parser())
   use value <- do(
-    nibble.one_of([
-      flow_node_parser(),
-      return(yaml.Null),
-    ]),
+    flow_node_parser()
+    |> or(yaml.Null),
   )
 
   yaml.Mapping([#(key, value)])
@@ -108,10 +117,8 @@ fn explicit_mapping_entry_parser() -> Parser(
 ) {
   use _ <- do(nibble.token(token.QuestionMark))
 
-  nibble.one_of([
-    implicit_mapping_entry_parser(),
-    return(#(yaml.Null, yaml.Null)),
-  ])
+  implicit_mapping_entry_parser()
+  |> or(#(yaml.Null, yaml.Null))
 }
 
 fn implicit_mapping_entry_parser() -> Parser(
@@ -129,10 +136,8 @@ fn implicit_mapping_entry_parser() -> Parser(
 fn plain_mapping_entry_parser() -> Parser(#(YamlAST, YamlAST), Token, Context) {
   use key <- do(plain_mapping_key_parser())
   use value <- do(
-    nibble.one_of([
-      flow_node_parser(),
-      return(yaml.Null),
-    ]),
+    flow_node_parser()
+    |> or(yaml.Null),
   )
 
   return(#(key, value))
@@ -151,10 +156,8 @@ fn empty_key_mapping_entry_parser() -> Parser(
 fn key_mapping_entry_parser() -> Parser(#(YamlAST, YamlAST), Token, Context) {
   use key <- do(flow_node_parser())
   use value <- do(
-    nibble.one_of([
-      mapping_value_parser(),
-      return(yaml.Null),
-    ]),
+    mapping_value_parser()
+    |> or(yaml.Null),
   )
 
   return(#(key, value))
@@ -171,10 +174,8 @@ fn plain_mapping_key_parser() -> Parser(YamlAST, Token, Context) {
 fn mapping_value_parser() -> Parser(YamlAST, Token, Context) {
   use _ <- do(nibble.token(token.Colon))
 
-  nibble.one_of([
-    flow_node_parser(),
-    return(yaml.Null),
-  ])
+  flow_node_parser()
+  |> or(yaml.Null)
 }
 
 fn flow_node_parser() -> Parser(YamlAST, Token, Context) {

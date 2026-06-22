@@ -56,6 +56,126 @@ pub fn block_sequence_of_block_mappings_test() {
   |> snap(input, "block_sequence_of_block_mappings_test")
 }
 
+pub fn explicit_scalar_key_block_mapping_test() {
+  let input = "? name\n: Mark"
+
+  input
+  |> yaml.parse_ast()
+  |> snap(input, "explicit_scalar_key_block_mapping_test")
+}
+
+pub fn explicit_empty_key_block_mapping_test() {
+  let input = ": empty key"
+
+  input
+  |> yaml.parse_ast()
+  |> snap(input, "explicit_empty_key_block_mapping_test")
+}
+
+pub fn explicit_flow_collection_key_block_mapping_test() {
+  let input = "? [one, two]\n: sequence key"
+
+  input
+  |> yaml.parse_ast()
+  |> snap(input, "explicit_flow_collection_key_block_mapping_test")
+}
+
+pub fn explicit_nested_block_key_block_mapping_test() {
+  let input = "?\n  - one\n  - two\n: sequence key"
+
+  input
+  |> yaml.parse_ast()
+  |> snap(input, "explicit_nested_block_key_block_mapping_test")
+}
+
+pub fn explicit_nested_block_value_block_mapping_test() {
+  let input = "? key\n:\n  inner: value"
+
+  input
+  |> yaml.parse_ast()
+  |> snap(input, "explicit_nested_block_value_block_mapping_test")
+}
+
+pub fn explicit_compact_sequence_key_and_value_block_mapping_test() {
+  let input = "? - Detroit Tigers\n  - Chicago cubs\n: - 2001-07-23"
+
+  input
+  |> yaml.parse_ast()
+  |> snap(input, "explicit_compact_sequence_key_and_value_block_mapping_test")
+}
+
+pub fn implicit_quoted_key_block_mapping_test() {
+  let input = "\"quoted key\":\n- entry"
+
+  input
+  |> yaml.parse_ast()
+  |> snap(input, "implicit_quoted_key_block_mapping_test")
+}
+
+pub fn multiple_explicit_entries_block_mapping_test() {
+  let input = "? one\n: two\n? three\n: four"
+
+  input
+  |> yaml.parse_ast()
+  |> snap(input, "multiple_explicit_entries_block_mapping_test")
+}
+
+pub fn explicit_block_mapping_key_block_mapping_test() {
+  let input = "?\n  left: one\n  right: two\n: mapping key"
+
+  input
+  |> yaml.parse_ast()
+  |> snap(input, "explicit_block_mapping_key_block_mapping_test")
+}
+
+pub fn nested_explicit_block_mapping_value_test() {
+  let input = "outer:\n  ? inner\n  : value\n  sibling: ok"
+
+  input
+  |> yaml.parse_ast()
+  |> snap(input, "nested_explicit_block_mapping_value_test")
+}
+
+pub fn explicit_value_is_explicit_block_mapping_test() {
+  let input = "? outer\n:\n  ? inner\n  : value"
+
+  input
+  |> yaml.parse_ast()
+  |> snap(input, "explicit_value_is_explicit_block_mapping_test")
+}
+
+pub fn explicit_flow_mapping_key_nested_value_test() {
+  let input = "? {left: [one, two], right: {nested: yes}}\n:\n  result: ok"
+
+  input
+  |> yaml.parse_ast()
+  |> snap(input, "explicit_flow_mapping_key_nested_value_test")
+}
+
+pub fn null_key_with_nested_explicit_mapping_value_test() {
+  let input = ":\n  ? nested key\n  : nested value"
+
+  input
+  |> yaml.parse_ast()
+  |> snap(input, "null_key_with_nested_explicit_mapping_value_test")
+}
+
+pub fn explicit_null_value_before_next_entry_test() {
+  let input = "? lonely\nnext: value"
+
+  input
+  |> yaml.parse_ast()
+  |> snap(input, "explicit_null_value_before_next_entry_test")
+}
+
+pub fn sequence_with_nested_explicit_mappings_test() {
+  let input = "- ? name\n  : Mark\n- ?\n    role: hitter\n  : active"
+
+  input
+  |> yaml.parse_ast()
+  |> snap(input, "sequence_with_nested_explicit_mappings_test")
+}
+
 fn snap(parsed: _, input: String, title: String) {
   assert result.is_ok({
     use yaml <- result.try(parsed)

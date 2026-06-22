@@ -1,0 +1,18 @@
+---
+version: 2.0.1
+title: lexer:block_mapping:null_key_with_nested_explicit_mapping_value_test
+---
+Input:
+
+```yaml
+:
+  ? nested key
+  : nested value
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[Colon, Indentation(2), QuestionMark, PlainScalar("nested key"), Indentation(2), Colon, PlainScalar("nested value")]
+
+```

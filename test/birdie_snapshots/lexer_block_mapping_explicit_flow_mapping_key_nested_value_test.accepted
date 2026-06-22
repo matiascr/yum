@@ -1,0 +1,18 @@
+---
+version: 2.0.1
+title: lexer:block_mapping:explicit_flow_mapping_key_nested_value_test
+---
+Input:
+
+```yaml
+? {left: [one, two], right: {nested: yes}}
+:
+  result: ok
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[QuestionMark, OpenMapping, MappingKey("left"), OpenSequence, PlainScalar("one"), Comma, PlainScalar("two"), CloseSequence, Comma, MappingKey("right"), OpenMapping, MappingKey("nested"), PlainScalar("yes"), CloseMapping, CloseMapping, Indentation(0), Colon, Indentation(2), MappingKey("result"), PlainScalar("ok")]
+
+```

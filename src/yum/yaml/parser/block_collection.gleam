@@ -14,76 +14,63 @@ import yum/yaml/token.{type Token}
 pub fn parser() -> Parser(YamlAST, Token, Context) {
   use indent <- do(nibble.optional(indentation.value_parser()))
   let indent = indent |> option.unwrap(0)
-  nibble.one_of([
-    block_sequence_parser(indent),
-    block_mapping_parser(indent),
-  ])
+
+  block_collection_parser(indent)
 }
 
 fn block_sequence_parser(indent: Int) -> Parser(YamlAST, Token, Context) {
-  block_sequence.parser(indent, node_parser)
+  block_sequence.parser(indent, block_node_parser)
 }
 
 fn block_mapping_parser(indent: Int) -> Parser(YamlAST, Token, Context) {
   block_mapping.parser(indent, mapping_value_parser)
 }
 
-fn nested_sequence_parser(
+fn block_collection_parser(indent: Int) -> Parser(YamlAST, Token, Context) {
+  nibble.one_of([
+    block_sequence_parser(indent),
+    block_mapping_parser(indent),
+  ])
+}
+
+fn compact_collection_parser(indent: Int) -> Parser(YamlAST, Token, Context) {
+  block_collection_parser(indent + 2)
+}
+
+fn nested_collection_parser(
   parent_indent: Int,
 ) -> Parser(YamlAST, Token, Context) {
-  nibble.lazy(fn() {
-    use indent <- do(indentation.value_parser())
+  use indent <- do(indentation.greater_than_parser(parent_indent))
 
-    case indent > parent_indent {
-      True -> block_sequence_parser(indent)
-      False -> fail()
-    }
-  })
+  block_collection_parser(indent)
 }
 
 fn indentless_sequence_parser(
   parent_indent: Int,
 ) -> Parser(YamlAST, Token, Context) {
-  use Nil <- do(indentation.same_parser(parent_indent))
+  use Nil <- do(indentation.same_amount_parser(parent_indent))
   block_sequence_parser(parent_indent)
 }
 
-fn nested_mapping_parser(
-  parent_indent: Int,
-) -> Parser(YamlAST, Token, Context) {
-  nibble.lazy(fn() {
-    use indent <- do(indentation.value_parser())
-
-    case indent > parent_indent {
-      True -> block_mapping_parser(indent)
-      False -> fail()
-    }
-  })
-}
-
-fn fail() -> Parser(a, Token, Context) {
-  nibble.fail("Expected a block collection")
-}
-
-fn node_parser(indent: Int) -> Parser(YamlAST, Token, Context) {
+fn block_node_parser(indent: Int) -> Parser(YamlAST, Token, Context) {
   nibble.one_of([
-    nested_sequence_parser(indent),
-    nested_mapping_parser(indent),
     flow_collection.parser(),
     double_quoted.parser(),
     single_quoted.parser(),
+    nibble.backtrackable(compact_collection_parser(indent)),
+    nested_collection_parser(indent),
     scalar.parser(),
   ])
 }
 
 fn mapping_value_parser(indent: Int) -> Parser(YamlAST, Token, Context) {
   nibble.one_of([
-    nested_sequence_parser(indent),
-    nested_mapping_parser(indent),
-    nibble.backtrackable(indentless_sequence_parser(indent)),
     flow_collection.parser(),
     double_quoted.parser(),
     single_quoted.parser(),
+    nibble.backtrackable(compact_collection_parser(indent)),
+    nested_collection_parser(indent),
+    nibble.backtrackable(indentless_sequence_parser(indent)),
     scalar.parser(),
   ])
 }

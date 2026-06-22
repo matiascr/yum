@@ -1,0 +1,19 @@
+---
+version: 2.0.1
+title: lexer:block_mapping:nested_explicit_block_mapping_value_test
+---
+Input:
+
+```yaml
+outer:
+  ? inner
+  : value
+  sibling: ok
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[MappingKey("outer"), Indentation(2), QuestionMark, PlainScalar("inner"), Indentation(2), Colon, PlainScalar("value"), Indentation(2), MappingKey("sibling"), PlainScalar("ok")]
+
+```

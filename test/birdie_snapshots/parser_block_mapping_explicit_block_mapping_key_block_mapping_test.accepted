@@ -1,0 +1,19 @@
+---
+version: 2.0.1
+title: parser:block_mapping:explicit_block_mapping_key_block_mapping_test
+---
+Input:
+
+```yaml
+?
+  left: one
+  right: two
+: mapping key
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([#(Mapping([#(String("left"), String("one")), #(String("right"), String("two"))]), String("mapping key"))])
+
+```

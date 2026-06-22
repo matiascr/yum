@@ -1,0 +1,17 @@
+---
+version: 2.0.1
+title: lexer:block_mapping:explicit_null_value_before_next_entry_test
+---
+Input:
+
+```yaml
+? lonely
+next: value
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[QuestionMark, PlainScalar("lonely"), Indentation(0), MappingKey("next"), PlainScalar("value")]
+
+```

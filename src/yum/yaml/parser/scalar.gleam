@@ -1,7 +1,6 @@
 import gleam/float
 import gleam/int
 import gleam/option.{type Option, None, Some}
-import gleam/regexp
 import gleam/result
 import gleam/string
 import nibble.{type Parser}
@@ -13,32 +12,7 @@ pub fn parser() -> Parser(YamlAST, Token, Context) {
   use tok <- nibble.take_map("Expected a value")
   case tok {
     token.SingleQuotedScalar(value:) | token.PlainScalar(value:) -> parse(value)
-
-    token.Hyphen
-    | token.QuestionMark
-    | token.Colon
-    | token.Comma
-    | token.OpenSequence
-    | token.CloseSequence
-    | token.OpenMapping
-    | token.CloseMapping
-    | token.Hash
-    | token.Ampersand
-    | token.Asterisk
-    | token.Exclamation
-    | token.VerticalBar
-    | token.GreaterThan
-    | token.SingleQuote
-    | token.DoubleQuote
-    | token.Percent
-    | token.At
-    | token.GraveAccent
-    | token.LineBreak
-    | token.Indentation(_)
-    | token.DoubleQuotedScalar(_)
-    | token.Escape(_)
-    | token.MappingKey(_)
-    | token.InvalidEscape -> None
+    _ -> None
   }
 }
 
@@ -49,158 +23,190 @@ pub fn parse(value: String) -> Option(YamlAST) {
   |> option.or(parse_int(value))
   |> option.or(parse_octal(value))
   |> option.or(parse_hexadecimal(value))
-  |> option.or(parse_float(value))
   |> option.or(parse_inf(value))
   |> option.or(parse_nan(value))
+  |> option.or(parse_float(value))
   |> option.or(Some(yaml.String(value)))
 }
 
-const null_regex = "^(null|Null|NULL|~)$"
-
 fn parse_null(input: String) -> Option(YamlAST) {
-  let assert Ok(regex) = regexp.from_string(null_regex)
-  case regexp.check(with: regex, content: input) {
-    True -> Some(yaml.Null)
-    False -> None
+  case input {
+    "null" | "Null" | "NULL" | "~" -> Some(yaml.Null)
+    _ -> None
   }
 }
-
-const bool_regex = "^(true|True|TRUE|false|False|FALSE)$"
 
 fn parse_bool(input: String) -> Option(YamlAST) {
-  let assert Ok(regex) = regexp.from_string(bool_regex)
-  case regexp.check(with: regex, content: input) {
-    True -> {
-      case string.trim(string.lowercase(input)) {
-        "true" -> Some(True)
-        "false" -> Some(False)
-        _ -> None
-      }
-      |> option.map(yaml.Bool)
-    }
-    False -> None
+  case input {
+    "true" | "True" | "TRUE" -> Some(yaml.Bool(True))
+    "false" | "False" | "FALSE" -> Some(yaml.Bool(False))
+    _ -> None
   }
 }
-
-const int_regex = "^[-+]?[0-9]+$"
 
 fn parse_int(input: String) -> Option(YamlAST) {
-  let assert Ok(regex) = regexp.from_string(int_regex)
-  case regexp.check(with: regex, content: input) {
-    True -> {
-      case input {
-        "+" <> digits -> int.parse(digits)
-        "-" <> digits -> int.parse(digits) |> result.map(int.negate)
-        _ -> int.parse(input)
-      }
-      |> option.from_result()
-      |> option.map(yaml.Int)
-    }
-    False -> None
+  case input {
+    "+" <> digits -> parse_decimal_int(digits, fn(n) { n })
+    "-" <> digits -> parse_decimal_int(digits, int.negate)
+    _ -> parse_decimal_int(input, fn(n) { n })
   }
 }
 
-const octal_regex = "^0o[0-7]+$"
+fn parse_decimal_int(input: String, sign: fn(Int) -> Int) -> Option(YamlAST) {
+  case has_digits(input), all_decimal_digits(input) {
+    True, True ->
+      input
+      |> int.parse()
+      |> result.map(sign)
+      |> result.map(yaml.Int)
+      |> option.from_result()
+    _, _ -> None
+  }
+}
 
 fn parse_octal(input: String) -> Option(YamlAST) {
-  let assert Ok(regex) = regexp.from_string(octal_regex)
-  case regexp.check(with: regex, content: input) {
-    True -> {
-      case input {
-        "0o" <> digits -> {
+  case input {
+    "0o" <> digits ->
+      case has_digits(digits), all_octal_digits(digits) {
+        True, True ->
           int.base_parse(digits, 8)
           |> option.from_result()
           |> option.map(yaml.Int)
-        }
-        _ -> None
+        _, _ -> None
       }
-    }
-    False -> None
+    _ -> None
   }
 }
 
-const hexadecimal_regex = "^0x[0-9a-fA-F]+$"
-
 fn parse_hexadecimal(input: String) -> Option(YamlAST) {
-  let assert Ok(regex) = regexp.from_string(hexadecimal_regex)
-  case regexp.check(with: regex, content: input) {
-    True -> {
-      case input {
-        "0x" <> digits -> {
+  case input {
+    "0x" <> digits ->
+      case has_digits(digits), all_hexadecimal_digits(digits) {
+        True, True ->
           int.base_parse(digits, 16)
           |> option.from_result()
           |> option.map(yaml.Int)
-        }
-        _ -> None
+        _, _ -> None
       }
-    }
-    False -> None
+    _ -> None
   }
 }
 
-const float_regex = "^[-+]?(\\.[0-9]+|[0-9]+)\\.([0-9]*)?([eE][-+]?[0-9]+)?$"
-
-fn parse_float(input: String) {
-  let assert Ok(regex) = regexp.from_string(float_regex)
-  case regexp.scan(with: regex, content: input) {
-    [] -> None
-    [regexp.Match(content: _, submatches:), ..] ->
-      case submatches {
-        [Some(integer), None, None] -> {
-          float.parse(integer <> ".0")
-          |> option.from_result()
-        }
-        [None, Some(decimal), None] -> {
-          float.parse("0." <> decimal)
-          |> option.from_result()
-        }
-        [Some(integer), Some(decimal), None] -> {
-          float.parse(integer <> "." <> decimal)
-          |> option.from_result()
-        }
-        [Some(integer), None, Some(float)] -> {
-          float.parse(integer <> ".0" <> float)
-          |> option.from_result()
-        }
-        [Some(integer), Some(decimal), Some(float)] -> {
-          float.parse(integer <> "." <> decimal <> float)
-          |> option.from_result()
-        }
-        [Some(integer), Some(decimal)] -> {
-          float.parse(integer <> "." <> decimal)
-          |> option.from_result()
-        }
-        [Some(integer), None] | [Some(integer)] -> {
-          float.parse(integer <> ".0")
-          |> option.from_result()
-        }
-        _ -> None
-      }
+fn parse_float(input: String) -> Option(YamlAST) {
+  case string.contains(input, "."), has_decimal_digit(input) {
+    True, True ->
+      input
+      |> parse_float_value()
+      |> option.from_result()
       |> option.map(yaml.Float)
+    _, _ -> None
   }
 }
 
-const inf_regex = "^[-+]?(\\.inf|\\.Inf|\\.INF)$"
+fn parse_float_value(input: String) -> Result(Float, Nil) {
+  case input {
+    "+" <> unsigned -> float.parse(unsigned)
+    _ -> float.parse(input)
+  }
+}
 
 fn parse_inf(input: String) -> Option(YamlAST) {
-  let assert Ok(regex) = regexp.from_string(inf_regex)
-  case regexp.check(with: regex, content: input) {
-    True ->
-      case string.lowercase(string.trim(input)) {
-        "-" <> _ -> yaml.NegInf
-        _ -> yaml.PosInf
-      }
-      |> Some
-    False -> None
+  case input {
+    ".inf" | ".Inf" | ".INF" | "+.inf" | "+.Inf" | "+.INF" -> Some(yaml.PosInf)
+    "-.inf" | "-.Inf" | "-.INF" -> Some(yaml.NegInf)
+    _ -> None
   }
 }
 
-const nan_regex = "^(\\.nan|\\.NaN|\\.NAN)$"
-
 fn parse_nan(input: String) -> Option(YamlAST) {
-  let assert Ok(regex) = regexp.from_string(nan_regex)
-  case regexp.check(with: regex, content: input) {
-    True -> Some(yaml.Nan)
-    False -> None
+  case input {
+    ".nan" | ".NaN" | ".NAN" -> Some(yaml.Nan)
+    _ -> None
+  }
+}
+
+fn has_digits(input: String) -> Bool {
+  !string.is_empty(input)
+}
+
+fn has_decimal_digit(input: String) -> Bool {
+  case input {
+    "" -> False
+    "0" <> _
+    | "1" <> _
+    | "2" <> _
+    | "3" <> _
+    | "4" <> _
+    | "5" <> _
+    | "6" <> _
+    | "7" <> _
+    | "8" <> _
+    | "9" <> _ -> True
+    _ ->
+      case string.pop_grapheme(input) {
+        Ok(#(_, rest)) -> has_decimal_digit(rest)
+        Error(_) -> False
+      }
+  }
+}
+
+fn all_decimal_digits(input: String) -> Bool {
+  case input {
+    "" -> True
+    "0" <> rest
+    | "1" <> rest
+    | "2" <> rest
+    | "3" <> rest
+    | "4" <> rest
+    | "5" <> rest
+    | "6" <> rest
+    | "7" <> rest
+    | "8" <> rest
+    | "9" <> rest -> all_decimal_digits(rest)
+    _ -> False
+  }
+}
+
+fn all_octal_digits(input: String) -> Bool {
+  case input {
+    "" -> True
+    "0" <> rest
+    | "1" <> rest
+    | "2" <> rest
+    | "3" <> rest
+    | "4" <> rest
+    | "5" <> rest
+    | "6" <> rest
+    | "7" <> rest -> all_octal_digits(rest)
+    _ -> False
+  }
+}
+
+fn all_hexadecimal_digits(input: String) -> Bool {
+  case input {
+    "" -> True
+    "0" <> rest
+    | "1" <> rest
+    | "2" <> rest
+    | "3" <> rest
+    | "4" <> rest
+    | "5" <> rest
+    | "6" <> rest
+    | "7" <> rest
+    | "8" <> rest
+    | "9" <> rest
+    | "a" <> rest
+    | "b" <> rest
+    | "c" <> rest
+    | "d" <> rest
+    | "e" <> rest
+    | "f" <> rest
+    | "A" <> rest
+    | "B" <> rest
+    | "C" <> rest
+    | "D" <> rest
+    | "E" <> rest
+    | "F" <> rest -> all_hexadecimal_digits(rest)
+    _ -> False
   }
 }

@@ -1,0 +1,16 @@
+---
+version: 2.0.1
+title: parser:block_mapping:explicit_empty_key_block_mapping_test
+---
+Input:
+
+```yaml
+: empty key
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([Null(String("empty key"))])
+
+```

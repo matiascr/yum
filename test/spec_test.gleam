@@ -98,6 +98,28 @@ pub fn example_2_6_mapping_of_mappings_test() {
     |> Ok
 }
 
+pub fn example_2_11_mapping_between_sequences_test() {
+  let input =
+    "? - Detroit Tigers\n  - Chicago cubs\n: - 2001-07-23\n\n? [ New York Yankees,\n    Atlanta Braves ]\n: [ 2001-07-02, 2001-08-12,\n    2001-08-14 ]"
+
+  assert yaml.parse_ast(input)
+    == Mapping([
+      #(
+        Sequence([String("Detroit Tigers"), String("Chicago cubs")]),
+        Sequence([String("2001-07-23")]),
+      ),
+      #(
+        Sequence([String("New York Yankees"), String("Atlanta Braves")]),
+        Sequence([
+          String("2001-07-02"),
+          String("2001-08-12"),
+          String("2001-08-14"),
+        ]),
+      ),
+    ])
+    |> Ok
+}
+
 pub fn example_2_17_quoted_scalars_test() {
   let input =
     "unicode: \"Sosa did fine.\\u263A\"\ncontrol: \"\\b1998\\t1999\\t2000\\n\"\nhex esc: \"\\x0d\\x0a is \\r\\n\"\n\nsingle: '\"Howdy!\" he cried.'\nquoted: ' # Not a ''comment''.'\ntie-fighter: '|\\-*-/|'"
@@ -441,6 +463,19 @@ pub fn example_7_21_single_pair_implicit_entries_test() {
           #(Mapping([#(String("JSON"), String("like"))]), String("adjacent")),
         ]),
       ]),
+    ])
+    |> Ok
+}
+
+pub fn example_8_18_implicit_block_mapping_entries_test() {
+  let input =
+    "plain key: in-line value\n: # Both empty\n\"quoted key\":\n- entry"
+
+  assert yaml.parse_ast(input)
+    == Mapping([
+      #(String("plain key"), String("in-line value")),
+      #(Null, Null),
+      #(String("quoted key"), Sequence([String("entry")])),
     ])
     |> Ok
 }

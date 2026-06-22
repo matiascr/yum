@@ -1,0 +1,17 @@
+---
+version: 2.0.1
+title: parser:block_mapping:implicit_quoted_key_block_mapping_test
+---
+Input:
+
+```yaml
+"quoted key":
+- entry
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([#(String("quoted key"), Sequence([String("entry")]))])
+
+```

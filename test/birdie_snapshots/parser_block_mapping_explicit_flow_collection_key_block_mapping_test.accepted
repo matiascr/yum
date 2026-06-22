@@ -1,0 +1,17 @@
+---
+version: 2.0.1
+title: parser:block_mapping:explicit_flow_collection_key_block_mapping_test
+---
+Input:
+
+```yaml
+? [one, two]
+: sequence key
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+Mapping([#(Sequence([String("one"), String("two")]), String("sequence key"))])
+
+```
