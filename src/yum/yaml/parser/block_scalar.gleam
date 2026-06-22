@@ -166,12 +166,12 @@ fn apply_chomp(
   trailing_empty_lines: Int,
   chomp: Chomp,
 ) -> String {
-  case chomp, content_lines, trailing_empty_lines {
-    token.Strip, _, _ -> content
-    token.Clip, [], 0 -> ""
-    token.Clip, _, _ -> content <> "\n"
-    token.Keep, [], 0 -> ""
-    token.Keep, _, _ ->
+  case chomp, content_lines {
+    token.Strip, _ -> content
+    token.Clip, [] -> ""
+    token.Clip, _ -> content <> "\n"
+    token.Keep, [] -> string.repeat("\n", trailing_empty_lines)
+    token.Keep, _ ->
       content <> "\n" <> string.repeat("\n", trailing_empty_lines)
   }
 }

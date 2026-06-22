@@ -74,6 +74,19 @@ pub fn example_2_4_sequence_of_mappings_test() {
     |> Ok
 }
 
+pub fn example_2_5_sequence_of_sequences_test() {
+  let input =
+    "- [name        , hr, avg  ]\n- [Mark McGwire, 65, 0.278]\n- [Sammy Sosa  , 63, 0.288]"
+
+  assert yaml.parse_ast(input)
+    == Sequence([
+      Sequence([String("name"), String("hr"), String("avg")]),
+      Sequence([String("Mark McGwire"), Int(65), Float(0.278)]),
+      Sequence([String("Sammy Sosa"), Int(63), Float(0.288)]),
+    ])
+    |> Ok
+}
+
 pub fn example_2_6_mapping_of_mappings_test() {
   let input =
     "Mark McGwire: {hr: 65, avg: 0.278}\nSammy Sosa: {\n    hr: 63,\n    avg: 0.288,\n }"
@@ -120,6 +133,44 @@ pub fn example_2_11_mapping_between_sequences_test() {
     |> Ok
 }
 
+pub fn example_2_12_compact_nested_mapping_test() {
+  let input =
+    "# Products purchased\n- item    : Super Hoop\n  quantity: 1\n- item    : Basketball\n  quantity: 4\n- item    : Big Shoes\n  quantity: 1"
+
+  assert yaml.parse_ast(input)
+    == Sequence([
+      Mapping([
+        #(String("item"), String("Super Hoop")),
+        #(String("quantity"), Int(1)),
+      ]),
+      Mapping([
+        #(String("item"), String("Basketball")),
+        #(String("quantity"), Int(4)),
+      ]),
+      Mapping([
+        #(String("item"), String("Big Shoes")),
+        #(String("quantity"), Int(1)),
+      ]),
+    ])
+    |> Ok
+}
+
+pub fn example_2_16_block_scalars_test() {
+  let input =
+    "name: Mark McGwire\naccomplishment: >\n  Mark set a major league\n  home run record in 1998.\nstats: |\n  65 Home Runs\n  0.278 Batting Average"
+
+  assert yaml.parse_ast(input)
+    == Mapping([
+      #(String("name"), String("Mark McGwire")),
+      #(
+        String("accomplishment"),
+        String("Mark set a major league home run record in 1998.\n"),
+      ),
+      #(String("stats"), String("65 Home Runs\n0.278 Batting Average\n")),
+    ])
+    |> Ok
+}
+
 pub fn example_2_17_quoted_scalars_test() {
   let input =
     "unicode: \"Sosa did fine.\\u263A\"\ncontrol: \"\\b1998\\t1999\\t2000\\n\"\nhex esc: \"\\x0d\\x0a is \\r\\n\"\n\nsingle: '\"Howdy!\" he cried.'\nquoted: ' # Not a ''comment''.'\ntie-fighter: '|\\-*-/|'"
@@ -144,6 +195,46 @@ pub fn example_2_18_multi_line_flow_scalars_test() {
     == Mapping([
       #(String("plain"), String("This unquoted scalar spans many lines.")),
       #(String("quoted"), String("So does this quoted scalar.\n")),
+    ])
+    |> Ok
+}
+
+pub fn example_2_19_integers_test() {
+  let input = "canonical: 12345\ndecimal: +12345\noctal: 0o14\nhexadecimal: 0xC"
+
+  assert yaml.parse_ast(input)
+    == Mapping([
+      #(String("canonical"), Int(12_345)),
+      #(String("decimal"), Int(12_345)),
+      #(String("octal"), Int(12)),
+      #(String("hexadecimal"), Int(12)),
+    ])
+    |> Ok
+}
+
+pub fn example_2_20_floating_point_test() {
+  let input =
+    "canonical: 1.23015e+3\nexponential: 12.3015e+02\nfixed: 1230.15\nnegative infinity: -.inf\nnot a number: .nan"
+
+  assert yaml.parse_ast(input)
+    == Mapping([
+      #(String("canonical"), Float(1230.15)),
+      #(String("exponential"), Float(1230.15)),
+      #(String("fixed"), Float(1230.15)),
+      #(String("negative infinity"), NegInf),
+      #(String("not a number"), Nan),
+    ])
+    |> Ok
+}
+
+pub fn example_2_21_miscellaneous_test() {
+  let input = "null:\nbooleans: [ true, false ]\nstring: '012345'"
+
+  assert yaml.parse_ast(input)
+    == Mapping([
+      #(Null, Null),
+      #(String("booleans"), Sequence([Bool(True), Bool(False)])),
+      #(String("string"), String("012345")),
     ])
     |> Ok
 }
@@ -205,67 +296,26 @@ pub fn example_6_5_empty_lines_test() {
     |> Ok
 }
 
-pub fn example_2_16_block_scalars_test() {
-  let input =
-    "name: Mark McGwire\naccomplishment: >\n  Mark set a major league\n  home run record in 1998.\nstats: |\n  65 Home Runs\n  0.278 Batting Average"
-
-  assert yaml.parse_ast(input)
-    == Mapping([
-      #(String("name"), String("Mark McGwire")),
-      #(
-        String("accomplishment"),
-        String("Mark set a major league home run record in 1998.\n"),
-      ),
-      #(String("stats"), String("65 Home Runs\n0.278 Batting Average\n")),
-    ])
-    |> Ok
-}
-
-pub fn example_2_19_integers_test() {
-  let input = "canonical: 12345\ndecimal: +12345\noctal: 0o14\nhexadecimal: 0xC"
-
-  assert yaml.parse_ast(input)
-    == Mapping([
-      #(String("canonical"), Int(12_345)),
-      #(String("decimal"), Int(12_345)),
-      #(String("octal"), Int(12)),
-      #(String("hexadecimal"), Int(12)),
-    ])
-    |> Ok
-}
-
-pub fn example_2_20_floating_point_test() {
-  let input =
-    "canonical: 1.23015e+3\nexponential: 12.3015e+02\nfixed: 1230.15\nnegative infinity: -.inf\nnot a number: .nan"
-
-  assert yaml.parse_ast(input)
-    == Mapping([
-      #(String("canonical"), Float(1230.15)),
-      #(String("exponential"), Float(1230.15)),
-      #(String("fixed"), Float(1230.15)),
-      #(String("negative infinity"), NegInf),
-      #(String("not a number"), Nan),
-    ])
-    |> Ok
-}
-
-pub fn example_2_21_miscellaneous_test() {
-  let input = "null:\nbooleans: [ true, false ]\nstring: '012345'"
-
-  assert yaml.parse_ast(input)
-    == Mapping([
-      #(Null, Null),
-      #(String("booleans"), Sequence([Bool(True), Bool(False)])),
-      #(String("string"), String("012345")),
-    ])
-    |> Ok
-}
-
 pub fn example_6_8_flow_folding_test() {
   let input = "\"  foo \n \n  \t bar\n\n  baz\n \""
 
   assert yaml.parse_ast(input)
     == String(" foo\nbar\nbaz ")
+    |> Ok
+}
+
+pub fn example_7_4_double_quoted_implicit_keys_test() {
+  let input = "{ \"implicit block key\": [ { \"implicit flow key\": value } ] }"
+
+  assert yaml.parse_ast(input)
+    == Mapping([
+      #(
+        String("implicit block key"),
+        Sequence([
+          Mapping([#(String("implicit flow key"), String("value"))]),
+        ]),
+      ),
+    ])
     |> Ok
 }
 
@@ -283,21 +333,6 @@ pub fn example_7_6_double_quoted_lines_test() {
 
   assert yaml.parse_ast(input)
     == String(" 1st non-empty\n2nd non-empty 3rd non-empty ")
-    |> Ok
-}
-
-pub fn example_7_4_double_quoted_implicit_keys_test() {
-  let input = "{ \"implicit block key\": [ { \"implicit flow key\": value } ] }"
-
-  assert yaml.parse_ast(input)
-    == Mapping([
-      #(
-        String("implicit block key"),
-        Sequence([
-          Mapping([#(String("implicit flow key"), String("value"))]),
-        ]),
-      ),
-    ])
     |> Ok
 }
 
@@ -332,6 +367,28 @@ pub fn example_7_9_single_quoted_lines_test() {
     |> Ok
 }
 
+pub fn example_7_10_plain_characters_test() {
+  let input =
+    "# Outside flow collection:\n- ::vector\n- \": - ()\"\n- Up, up, and away!\n- -123\n- http://example.com/foo#bar\n# Inside flow collection:\n- [ ::vector,\n  \": - ()\",\n  \"Up, up, and away!\",\n  -123,\n  http://example.com/foo#bar ]"
+
+  assert yaml.parse_ast(input)
+    == Sequence([
+      String("::vector"),
+      String(": - ()"),
+      String("Up, up, and away!"),
+      Int(-123),
+      String("http://example.com/foo#bar"),
+      Sequence([
+        String("::vector"),
+        String(": - ()"),
+        String("Up, up, and away!"),
+        Int(-123),
+        String("http://example.com/foo#bar"),
+      ]),
+    ])
+    |> Ok
+}
+
 pub fn example_7_11_plain_implicit_keys_test() {
   let input = "{ implicit block key: [ { implicit flow key: value } ] }"
 
@@ -362,20 +419,6 @@ pub fn example_7_13_flow_sequence_test() {
     == Sequence([
       Sequence([String("one"), String("two")]),
       Sequence([String("three"), String("four")]),
-    ])
-    |> Ok
-}
-
-pub fn example_7_23_flow_content_test() {
-  let input = "- [ a, b ]\n- { a: b }\n- \"a\"\n- 'b'\n- c"
-
-  assert yaml.parse_ast(input)
-    == Sequence([
-      Sequence([String("a"), String("b")]),
-      Mapping([#(String("a"), String("b"))]),
-      String("a"),
-      String("b"),
-      String("c"),
     ])
     |> Ok
 }
@@ -483,6 +526,97 @@ pub fn example_7_21_single_pair_implicit_entries_test() {
     |> Ok
 }
 
+pub fn example_7_23_flow_content_test() {
+  let input = "- [ a, b ]\n- { a: b }\n- \"a\"\n- 'b'\n- c"
+
+  assert yaml.parse_ast(input)
+    == Sequence([
+      Sequence([String("a"), String("b")]),
+      Mapping([#(String("a"), String("b"))]),
+      String("a"),
+      String("b"),
+      String("c"),
+    ])
+    |> Ok
+}
+
+pub fn example_8_6_empty_scalar_chomping_test() {
+  let input = "strip: >-\n\nclip: >\n\nkeep: |+\n\n"
+
+  assert yaml.parse_ast(input)
+    == Mapping([
+      #(String("strip"), String("")),
+      #(String("clip"), String("")),
+      #(String("keep"), String("\n")),
+    ])
+    |> Ok
+}
+
+pub fn example_8_7_literal_scalar_test() {
+  let input = "|\n literal\n \ttext\n"
+
+  assert yaml.parse_ast(input)
+    == String("literal\n\ttext\n")
+    |> Ok
+}
+
+pub fn example_8_9_folded_scalar_test() {
+  let input = ">\n folded\n text\n"
+
+  assert yaml.parse_ast(input)
+    == String("folded text\n")
+    |> Ok
+}
+
+pub fn example_8_14_block_sequence_test() {
+  let input = "block sequence:\n  - one\n  - two : three"
+
+  assert yaml.parse_ast(input)
+    == Mapping([
+      #(
+        String("block sequence"),
+        Sequence([String("one"), Mapping([#(String("two"), String("three"))])]),
+      ),
+    ])
+    |> Ok
+}
+
+pub fn example_8_15_block_sequence_entry_types_test() {
+  let input =
+    "- # Empty\n- |\n block node\n- - one # Compact\n  - two # sequence\n- one: two # Compact mapping"
+
+  assert yaml.parse_ast(input)
+    == Sequence([
+      Null,
+      String("block node\n"),
+      Sequence([String("one"), String("two")]),
+      Mapping([#(String("one"), String("two"))]),
+    ])
+    |> Ok
+}
+
+pub fn example_8_16_block_mappings_test() {
+  let input = "block mapping:\n key: value"
+
+  assert yaml.parse_ast(input)
+    == Mapping([
+      #(String("block mapping"), Mapping([#(String("key"), String("value"))])),
+    ])
+    |> Ok
+}
+
+pub fn example_8_17_explicit_block_mapping_entries_test() {
+  let input =
+    "? explicit key # Empty value\n? |\n  block key\n: - one # Explicit compact\n  - two # block value"
+
+  assert yaml.parse_ast(input)
+    == Mapping([
+      #(String("explicit key"), Null),
+      #(String("block key\n"), Sequence([String("one"), String("two")])),
+    ])
+    |> Ok
+}
+
 pub fn example_8_18_implicit_block_mapping_entries_test() {
   let input =
     "plain key: in-line value\n: # Both empty\n\"quoted key\":\n- entry"
@@ -492,6 +626,22 @@ pub fn example_8_18_implicit_block_mapping_entries_test() {
       #(String("plain key"), String("in-line value")),
       #(Null, Null),
       #(String("quoted key"), Sequence([String("entry")])),
+    ])
+    |> Ok
+}
+
+pub fn example_8_19_compact_block_mappings_test() {
+  let input = "- sun: yellow\n- ? earth: blue\n  : moon: white"
+
+  assert yaml.parse_ast(input)
+    == Sequence([
+      Mapping([#(String("sun"), String("yellow"))]),
+      Mapping([
+        #(
+          Mapping([#(String("earth"), String("blue"))]),
+          Mapping([#(String("moon"), String("white"))]),
+        ),
+      ]),
     ])
     |> Ok
 }

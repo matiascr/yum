@@ -12,6 +12,7 @@ pub fn lexer() -> Matcher(Token, Context) {
 
     "}", _ -> token.CloseMapping |> lexer.Keep(prev)
     ",", _ -> token.Comma |> lexer.Keep(ctx)
+    ":", ":" -> lexer.Skip
     ":", _ -> token.Colon |> lexer.Keep(ctx)
     "?", _ -> token.QuestionMark |> lexer.Keep(ctx)
     "[", _ -> token.OpenSequence |> lexer.Keep(context.FlowSequence(ctx))
