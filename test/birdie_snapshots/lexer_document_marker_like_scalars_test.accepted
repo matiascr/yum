@@ -1,0 +1,20 @@
+---
+version: 2.0.1
+title: lexer:document:marker_like_scalars_test
+---
+Input:
+
+```yaml
+items:
+- ---not marker
+- ...not marker
+mapping:
+  marker: ---
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[MappingKey("items"), Indentation(0), Hyphen, PlainScalar("---not marker"), Indentation(0), Hyphen, PlainScalar("...not marker"), Indentation(0), MappingKey("mapping"), Indentation(2), MappingKey("marker"), PlainScalar("---")]
+
+```

@@ -1,0 +1,21 @@
+---
+version: 2.0.1
+title: lexer:document:markers_around_block_collections_test
+---
+Input:
+
+```yaml
+---
+- one
+- two
+...
+---
+key: value
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[DocumentStart, Indentation(0), Hyphen, PlainScalar("one"), Indentation(0), Hyphen, PlainScalar("two"), Indentation(0), DocumentEnd, Indentation(0), DocumentStart, Indentation(0), MappingKey("key"), PlainScalar("value")]
+
+```

@@ -34,6 +34,12 @@ pub type Token {
   /// Denotes a comment. `#`
   Hash
 
+  // Document Markers ==========================================================
+  /// Starts an explicit document. `---`
+  DocumentStart
+  /// Ends a document without starting the next one. `...`
+  DocumentEnd
+
   // Node Property Indicators ==================================================
   /// Denotes a node’s anchor property.
   Ampersand

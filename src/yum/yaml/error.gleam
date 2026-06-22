@@ -12,6 +12,7 @@ import yum/yaml/token.{type Token}
 pub type YamlError {
   IndentNormalizationError
   LexerError(row: Int, col: Int, lexeme: String)
+  MultipleDocuments
   UnexpectedEndOfInput
   UnexpectedToken(token: Token, row: Int, col: Int)
   Other(nibble.Error(Token))

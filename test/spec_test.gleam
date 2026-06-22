@@ -111,6 +111,54 @@ pub fn example_2_6_mapping_of_mappings_test() {
     |> Ok
 }
 
+pub fn example_2_7_two_documents_in_a_stream_test() {
+  let input =
+    "# Ranking of 1998 home runs\n---\n- Mark McGwire\n- Sammy Sosa\n- Ken Griffey\n\n# Team ranking\n---\n- Chicago Cubs\n- St Louis Cardinals"
+
+  assert yaml.parse_ast_stream(input)
+    == [
+      Sequence([
+        String("Mark McGwire"),
+        String("Sammy Sosa"),
+        String("Ken Griffey"),
+      ]),
+      Sequence([String("Chicago Cubs"), String("St Louis Cardinals")]),
+    ]
+    |> Ok
+}
+
+pub fn example_2_8_play_by_play_feed_test() {
+  let input =
+    "---\ntime: 20:03:20\nplayer: Sammy Sosa\naction: strike (miss)\n...\n---\ntime: 20:03:47\nplayer: Sammy Sosa\naction: grand slam\n..."
+
+  assert yaml.parse_ast_stream(input)
+    == [
+      Mapping([
+        #(String("time"), String("20:03:20")),
+        #(String("player"), String("Sammy Sosa")),
+        #(String("action"), String("strike (miss)")),
+      ]),
+      Mapping([
+        #(String("time"), String("20:03:47")),
+        #(String("player"), String("Sammy Sosa")),
+        #(String("action"), String("grand slam")),
+      ]),
+    ]
+    |> Ok
+}
+
+pub fn example_2_9_single_document_with_two_comments_test() {
+  let input =
+    "---\nhr: # 1998 hr ranking\n  - Mark McGwire\n  - Sammy Sosa\nrbi:\n  # 1998 rbi ranking\n  - Sammy Sosa\n  - Ken Griffey"
+
+  assert yaml.parse_ast(input)
+    == Mapping([
+      #(String("hr"), Sequence([String("Mark McGwire"), String("Sammy Sosa")])),
+      #(String("rbi"), Sequence([String("Sammy Sosa"), String("Ken Griffey")])),
+    ])
+    |> Ok
+}
+
 pub fn example_2_11_mapping_between_sequences_test() {
   let input =
     "? - Detroit Tigers\n  - Chicago cubs\n: - 2001-07-23\n\n? [ New York Yankees,\n    Atlanta Braves ]\n: [ 2001-07-02, 2001-08-12,\n    2001-08-14 ]"
@@ -152,6 +200,23 @@ pub fn example_2_12_compact_nested_mapping_test() {
         #(String("quantity"), Int(1)),
       ]),
     ])
+    |> Ok
+}
+
+pub fn example_2_13_in_literals_newlines_are_preserved_test() {
+  let input = "--- |\n  \\//||\\/||\n  // ||  ||__"
+
+  assert yaml.parse_ast(input)
+    == String("\\//||\\/||\n// ||  ||__\n")
+    |> Ok
+}
+
+pub fn example_2_14_in_folded_scalars_newlines_become_spaces_test() {
+  let input =
+    "--- >\n  Mark McGwire's\n  year was crippled\n  by a knee injury."
+
+  assert yaml.parse_ast(input)
+    == String("Mark McGwire's year was crippled by a knee injury.\n")
     |> Ok
 }
 

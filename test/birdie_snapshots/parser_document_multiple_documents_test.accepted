@@ -1,0 +1,22 @@
+---
+version: 2.0.1
+title: parser:document:multiple_documents_test
+---
+Input:
+
+```yaml
+---
+one
+---
+two
+...
+---
+three
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[String("one"), String("two"), String("three")]
+
+```

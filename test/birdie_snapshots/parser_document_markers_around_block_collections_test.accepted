@@ -1,0 +1,21 @@
+---
+version: 2.0.1
+title: parser:document:markers_around_block_collections_test
+---
+Input:
+
+```yaml
+---
+- one
+- two
+...
+---
+key: value
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[Sequence([String("one"), String("two")]), Mapping([#(String("key"), String("value"))])]
+
+```

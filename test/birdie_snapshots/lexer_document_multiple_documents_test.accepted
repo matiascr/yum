@@ -1,0 +1,22 @@
+---
+version: 2.0.1
+title: lexer:document:multiple_documents_test
+---
+Input:
+
+```yaml
+---
+one
+---
+two
+...
+---
+three
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+[DocumentStart, Indentation(0), PlainScalar("one"), Indentation(0), DocumentStart, Indentation(0), PlainScalar("two"), Indentation(0), DocumentEnd, Indentation(0), DocumentStart, Indentation(0), PlainScalar("three")]
+
+```

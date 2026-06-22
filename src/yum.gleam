@@ -15,3 +15,9 @@ import yum/yaml/error.{type YamlError}
 pub fn parse(input: String) -> Result(Yaml, YamlError) {
   yaml.parse(input)
 }
+
+/// Parses a YAML stream into a list of YAML documents.
+///
+pub fn parse_stream(input: String) -> Result(List(Yaml), YamlError) {
+  yaml.parse_stream(input)
+}

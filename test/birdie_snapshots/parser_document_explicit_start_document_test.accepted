@@ -1,0 +1,17 @@
+---
+version: 2.0.1
+title: parser:document:explicit_start_document_test
+---
+Input:
+
+```yaml
+---
+hello
+```
+
+-----------------------------------------------------------------------
+
+```gleam
+String("hello")
+
+```

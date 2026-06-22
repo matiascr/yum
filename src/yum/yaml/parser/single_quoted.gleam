@@ -23,6 +23,8 @@ pub fn parser() -> Parser(YamlAST, Token, Context) {
         | token.OpenMapping
         | token.CloseMapping
         | token.Hash
+        | token.DocumentStart
+        | token.DocumentEnd
         | token.Ampersand
         | token.Asterisk
         | token.Exclamation

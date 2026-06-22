@@ -8,9 +8,10 @@
 //// yaml.parse("name: yum")
 //// ```
 ////
-//// Use [`parse`](#parse) when you want a YAML document value, including document-level
-//// metadata such as directives. Use [`parse_ast`](#parse_ast) when you only need the parsed
-//// node tree.
+//// Use [`parse`](#parse) when you want a single YAML document value, including
+//// document-level metadata such as directives. Use [`parse_stream`](#parse_stream) for
+//// YAML streams containing zero or more explicit documents. Use [`parse_ast`](#parse_ast)
+//// and [`parse_ast_stream`](#parse_ast_stream) when you only need parsed node trees.
 ////
 
 import gleam/bool
@@ -33,14 +34,34 @@ pub fn parse(input: String) -> Result(Yaml, YamlError) {
   |> result.map(ast.to_yaml)
 }
 
+/// Parses a YAML stream into a list of YAML documents.
+///
+pub fn parse_stream(input: String) -> Result(List(Yaml), YamlError) {
+  input
+  |> parse_ast_stream()
+  |> result.map(list.map(_, ast.to_yaml))
+}
+
 /// Parses a YAML file into the AST node for its document contents.
 ///
 pub fn parse_ast(input: String) -> Result(YamlAST, YamlError) {
+  use documents <- result.try(parse_ast_stream(input))
+
+  case documents {
+    [document] -> Ok(document)
+    [_, _, ..] -> Error(error.MultipleDocuments)
+    [] -> Error(error.UnexpectedEndOfInput)
+  }
+}
+
+/// Parses a YAML stream into the AST nodes for each document's contents.
+///
+pub fn parse_ast_stream(input: String) -> Result(List(YamlAST), YamlError) {
   use input <- result.try(normalize_whitespace(input, 0))
   use input <- result.try(normalize_indents(input))
 
   use tokens <- result.try(lexer.lex(input))
-  use parsed <- result.try(parser.parse(tokens))
+  use parsed <- result.try(parser.parse_stream(tokens))
   Ok(parsed)
 }
 
