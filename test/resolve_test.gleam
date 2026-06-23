@@ -114,6 +114,30 @@ pub fn resolve_expands_verbatim_tags_test() {
   assert node.tag(value) == option.Some("tag:example.com,2026:thing")
 }
 
+pub fn resolve_rejects_unterminated_verbatim_tags_test() {
+  let assert Ok(document) = yaml.parse("value: !<tag hello\n")
+  let assert option.Some(value) =
+    document
+    |> yaml.get([node.Key("value")])
+
+  let assert Error([error]) = yaml.resolve(document)
+
+  assert error == diagnostic.InvalidTag(tag: "<tag", span: node.span(value))
+  assert diagnostic.severity(error) == diagnostic.DiagnosticError
+  assert diagnostic.message(error) == "Invalid tag `<tag`"
+}
+
+pub fn resolve_rejects_empty_verbatim_tags_test() {
+  let assert Ok(document) = yaml.parse("value: !<> hello\n")
+  let assert option.Some(value) =
+    document
+    |> yaml.get([node.Key("value")])
+
+  let assert Error([error]) = yaml.resolve(document)
+
+  assert error == diagnostic.InvalidTag(tag: "<>", span: node.span(value))
+}
+
 pub fn resolve_rejects_unknown_tag_handles_test() {
   let assert Ok(document) = yaml.parse("value: !e!thing hello\n")
   let assert option.Some(value) =

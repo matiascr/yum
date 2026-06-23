@@ -470,9 +470,10 @@ fn expand_tag(
 ) -> Result(String, Diagnostic) {
   case tag {
     "<" <> verbatim ->
-      case string.ends_with(verbatim, ">") {
-        True -> Ok(string.drop_end(verbatim, 1))
-        False -> Ok(tag)
+      case string.ends_with(verbatim, ">"), string.drop_end(verbatim, 1) {
+        True, "" -> Error(diagnostic.InvalidTag(tag:, span:))
+        True, uri -> Ok(uri)
+        False, _ -> Error(diagnostic.InvalidTag(tag:, span:))
       }
 
     "!" <> suffix -> expand_tag_handle("!!", suffix, handles, span)

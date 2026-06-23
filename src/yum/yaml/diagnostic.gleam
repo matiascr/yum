@@ -53,6 +53,9 @@ pub type Diagnostic {
   /// A node tag uses a handle that has not been declared for the document.
   UnknownTagHandle(handle: String, span: Span)
 
+  /// A node tag is malformed.
+  InvalidTag(tag: String, span: Span)
+
   /// A merge key points at a value that is not a mapping.
   InvalidMergeTarget(found: node.KindName, span: Span)
 }
@@ -192,6 +195,7 @@ pub fn severity(diagnostic: Diagnostic) -> Severity {
     UnsupportedYamlVersion(..) -> DiagnosticError
     DuplicateYamlDirective(..) -> DiagnosticError
     UnknownTagHandle(..) -> DiagnosticError
+    InvalidTag(..) -> DiagnosticError
     InvalidMergeTarget(..) -> DiagnosticError
   }
 }
@@ -235,6 +239,7 @@ pub fn message(diagnostic: Diagnostic) -> String {
       "Unsupported YAML version `" <> version <> "`"
     DuplicateYamlDirective(..) -> "Duplicate %YAML directive"
     UnknownTagHandle(handle:, ..) -> "Unknown tag handle `" <> handle <> "`"
+    InvalidTag(tag:, ..) -> "Invalid tag `" <> tag <> "`"
     InvalidMergeTarget(..) -> "Merge key must reference a mapping"
   }
 }
@@ -250,6 +255,7 @@ pub fn span(diagnostic: Diagnostic) -> Span {
     UnsupportedYamlVersion(span:, ..) -> span
     DuplicateYamlDirective(duplicate:, ..) -> duplicate
     UnknownTagHandle(span:, ..) -> span
+    InvalidTag(span:, ..) -> span
     InvalidMergeTarget(span:, ..) -> span
   }
 }
@@ -267,6 +273,7 @@ pub fn related(diagnostic: Diagnostic) -> List(Related) {
     InvalidYamlDirective(..) -> []
     UnsupportedYamlVersion(..) -> []
     UnknownTagHandle(..) -> []
+    InvalidTag(..) -> []
     InvalidMergeTarget(..) -> []
   }
 }
