@@ -66,7 +66,7 @@ fn bare_block_node_parser(indent: Int) -> Parser(Node, Token, Context) {
     single_quoted.parser(),
     nibble.backtrackable(compact_collection_parser(indent)),
     nested_collection_parser(indent),
-    scalar.parser(),
+    scalar.block_plain_parser(indent),
   ])
 }
 
@@ -83,6 +83,6 @@ fn bare_mapping_value_parser(indent: Int) -> Parser(Node, Token, Context) {
     nibble.backtrackable(compact_collection_parser(indent)),
     nested_collection_parser(indent),
     nibble.backtrackable(indentless_sequence_parser(indent)),
-    scalar.parser(),
+    scalar.block_plain_parser(indent),
   ])
 }

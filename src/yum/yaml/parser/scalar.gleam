@@ -1,13 +1,19 @@
 import gleam/float
 import gleam/int
+import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
 import nibble.{type Parser, do, return}
 import yum/yaml/lexer/context.{type Context}
 import yum/yaml/node.{type Node}
+import yum/yaml/parser/indentation
 import yum/yaml/parser/span
 import yum/yaml/token.{type Token}
+
+type PlainLine {
+  PlainLine(value: String, span: node.Span)
+}
 
 pub fn parser() -> Parser(Node, Token, Context) {
   use parsed <- do(nibble.take_map("Expected a value", parsed_token))
@@ -16,6 +22,61 @@ pub fn parser() -> Parser(Node, Token, Context) {
 
   node.new(kind, span: span.from_lexer(token_span), style:)
   |> return
+}
+
+pub fn block_plain_parser(parent_indent: Int) -> Parser(Node, Token, Context) {
+  use first <- do(plain_line_parser())
+  use rest <- do(
+    nibble.many(nibble.backtrackable(plain_continuation_parser(parent_indent))),
+  )
+
+  let PlainLine(value:, span: first_span) = first
+  let lines = [value, ..list.map(rest, fn(line) { line.value })]
+  let last_span = case list.last(rest) {
+    Ok(PlainLine(span:, ..)) -> span
+    Error(_) -> first_span
+  }
+  let kind =
+    lines
+    |> string.join(" ")
+    |> parse
+    |> option.unwrap(node.String(""))
+
+  node.new(
+    kind,
+    span: enclosing_span(first_span, last_span),
+    style: node.PlainScalar,
+  )
+  |> return
+}
+
+fn plain_continuation_parser(
+  parent_indent: Int,
+) -> Parser(PlainLine, Token, Context) {
+  use _ <- do(indentation.greater_than_parser(parent_indent))
+  plain_line_parser()
+}
+
+fn plain_line_parser() -> Parser(PlainLine, Token, Context) {
+  use value <- do(
+    nibble.take_map("Expected a plain scalar", fn(tok) {
+      case tok {
+        token.PlainScalar(value:) -> Some(value)
+        _ -> None
+      }
+    }),
+  )
+  use token_span <- do(nibble.span())
+
+  PlainLine(value:, span: span.from_lexer(token_span))
+  |> return
+}
+
+fn enclosing_span(first: node.Span, last: node.Span) -> node.Span {
+  let node.Span(start:, ..) = first
+  let node.Span(end:, ..) = last
+
+  node.Span(start:, end:)
 }
 
 fn parsed_token(tok: Token) -> Option(#(node.Kind, node.Style)) {

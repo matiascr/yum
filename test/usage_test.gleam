@@ -93,6 +93,22 @@ spec:
   assert node.as_int(port) == Ok(8080)
 }
 
+pub fn indented_plain_scalar_continuations_are_folded_test() {
+  let input =
+    "metadata:
+  description: Deploys the web service
+    across the production cluster
+"
+
+  let assert Ok(document) = yaml.parse(input)
+  let assert option.Some(description) =
+    document
+    |> yaml.get([node.Key("metadata"), node.Key("description")])
+
+  assert node.as_string(description)
+    == Ok("Deploys the web service across the production cluster")
+}
+
 pub fn package_metadata_can_be_decoded_into_a_gleam_type_test() {
   let input =
     "package:
