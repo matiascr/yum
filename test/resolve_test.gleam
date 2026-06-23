@@ -286,6 +286,27 @@ pub fn resolve_accepts_known_aliases_from_parsed_yaml_test() {
   assert yaml.resolve(document) |> result.is_ok()
 }
 
+pub fn resolve_warns_on_duplicate_anchors_test() {
+  let assert Ok(document) =
+    yaml.parse("one: &base 1\ntwo: &base 2\ncopy: *base\n")
+  let assert option.Some(one) = document |> yaml.get([node.Key("one")])
+  let assert option.Some(two) = document |> yaml.get([node.Key("two")])
+
+  let assert Ok(document) = yaml.resolve(document)
+  let assert [warning] = yaml.diagnostics(document)
+
+  assert warning
+    == diagnostic.DuplicateAnchor(
+      anchor: "base",
+      duplicate: node.span(two),
+      original: node.span(one),
+    )
+  assert diagnostic.severity(warning) == diagnostic.Warning
+  assert diagnostic.message(warning) == "Duplicate anchor `base`"
+  assert diagnostic.related(warning)
+    == [diagnostic.FirstAnchor(span: node.span(one))]
+}
+
 pub fn resolve_expands_single_merge_key_test() {
   let input =
     "base: &base

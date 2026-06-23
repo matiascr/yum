@@ -23,6 +23,9 @@ pub type Related {
   /// The first occurrence of a duplicate mapping key.
   FirstMappingKey(span: Span)
 
+  /// The first occurrence of a duplicate anchor.
+  FirstAnchor(span: Span)
+
   /// The first occurrence of a duplicate YAML directive.
   FirstYamlDirective(span: Span)
 }
@@ -33,6 +36,12 @@ pub type Diagnostic {
   /// The duplicate span points at the repeated key. The original span points
   /// at the first matching key.
   DuplicateMappingKey(key: String, duplicate: Span, original: Span)
+
+  /// A document contains the same anchor name more than once.
+  ///
+  /// The duplicate span points at the repeated anchor. The original span points
+  /// at the first matching anchor.
+  DuplicateAnchor(anchor: String, duplicate: Span, original: Span)
 
   /// An alias references an anchor that has not been seen earlier in the
   /// document.
@@ -92,7 +101,7 @@ fn collect_node_properties(
   value: Node,
   anchors: Dict(String, Node),
 ) -> #(Dict(String, Node), List(Diagnostic)) {
-  let diagnostics = case node.alias(value) {
+  let alias_diagnostics = case node.alias(value) {
     Some(alias) ->
       case dict.has_key(anchors, alias) {
         True -> []
@@ -101,12 +110,25 @@ fn collect_node_properties(
     None -> []
   }
 
-  let anchors = case node.anchor(value) {
-    Some(anchor) -> dict.insert(anchors, anchor, value)
-    None -> anchors
+  let #(anchors, anchor_diagnostics) = case node.anchor(value) {
+    Some(anchor) -> {
+      let diagnostics = case dict.get(anchors, anchor) {
+        Ok(original) -> [
+          DuplicateAnchor(
+            anchor:,
+            duplicate: node.span(value),
+            original: node.span(original),
+          ),
+        ]
+        Error(_) -> []
+      }
+
+      #(dict.insert(anchors, anchor, value), diagnostics)
+    }
+    None -> #(anchors, [])
   }
 
-  #(anchors, diagnostics)
+  #(anchors, list.append(alias_diagnostics, anchor_diagnostics))
 }
 
 fn collect_mapping_entries(
@@ -189,6 +211,7 @@ fn duplicate_key_diagnostic(duplicate: Node, first: SeenKey) -> Diagnostic {
 pub fn severity(diagnostic: Diagnostic) -> Severity {
   case diagnostic {
     DuplicateMappingKey(..) -> Warning
+    DuplicateAnchor(..) -> Warning
     UnknownAlias(..) -> DiagnosticError
     InvalidTagDirective(..) -> DiagnosticError
     InvalidYamlDirective(..) -> DiagnosticError
@@ -232,6 +255,7 @@ pub fn warnings(diagnostics: List(Diagnostic)) -> List(Diagnostic) {
 pub fn message(diagnostic: Diagnostic) -> String {
   case diagnostic {
     DuplicateMappingKey(key:, ..) -> "Duplicate mapping key `" <> key <> "`"
+    DuplicateAnchor(anchor:, ..) -> "Duplicate anchor `" <> anchor <> "`"
     UnknownAlias(alias:, ..) -> "Unknown alias `" <> alias <> "`"
     InvalidTagDirective(..) -> "Invalid %TAG directive"
     InvalidYamlDirective(..) -> "Invalid %YAML directive"
@@ -249,6 +273,7 @@ pub fn message(diagnostic: Diagnostic) -> String {
 pub fn span(diagnostic: Diagnostic) -> Span {
   case diagnostic {
     DuplicateMappingKey(duplicate:, ..) -> duplicate
+    DuplicateAnchor(duplicate:, ..) -> duplicate
     UnknownAlias(span:, ..) -> span
     InvalidTagDirective(span:) -> span
     InvalidYamlDirective(span:) -> span
@@ -265,6 +290,7 @@ pub fn span(diagnostic: Diagnostic) -> Span {
 pub fn related(diagnostic: Diagnostic) -> List(Related) {
   case diagnostic {
     DuplicateMappingKey(original:, ..) -> [FirstMappingKey(span: original)]
+    DuplicateAnchor(original:, ..) -> [FirstAnchor(span: original)]
     DuplicateYamlDirective(original:, ..) -> [
       FirstYamlDirective(span: original),
     ]
@@ -283,6 +309,7 @@ pub fn related(diagnostic: Diagnostic) -> List(Related) {
 pub fn related_message(related: Related) -> String {
   case related {
     FirstMappingKey(..) -> "First key appears here"
+    FirstAnchor(..) -> "First anchor appears here"
     FirstYamlDirective(..) -> "First %YAML directive appears here"
   }
 }
@@ -292,6 +319,7 @@ pub fn related_message(related: Related) -> String {
 pub fn related_span(related: Related) -> Span {
   case related {
     FirstMappingKey(span:) -> span
+    FirstAnchor(span:) -> span
     FirstYamlDirective(span:) -> span
   }
 }
