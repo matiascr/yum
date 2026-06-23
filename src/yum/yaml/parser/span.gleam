@@ -1,5 +1,5 @@
 import nibble/lexer
-import yum/yaml/node.{type YamlNode}
+import yum/yaml/node.{type Node}
 
 pub fn from_lexer(span: lexer.Span) -> node.Span {
   let lexer.Span(row_start, col_start, row_end, col_end) = span
@@ -11,8 +11,8 @@ pub fn from_lexer(span: lexer.Span) -> node.Span {
 }
 
 pub fn between(start: lexer.Span, end: lexer.Span) -> node.Span {
-  let lexer.Span(row_start, col_start, _, _) = start
-  let lexer.Span(_, _, row_end, col_end) = end
+  let lexer.Span(row_start:, col_start:, ..) = start
+  let lexer.Span(row_end:, col_end:, ..) = end
 
   node.Span(
     start: node.Position(row_start, col_start),
@@ -20,7 +20,7 @@ pub fn between(start: lexer.Span, end: lexer.Span) -> node.Span {
   )
 }
 
-pub fn enclosing(first: YamlNode, last: YamlNode) -> node.Span {
+pub fn enclosing(first: Node, last: Node) -> node.Span {
   let node.Span(start:, ..) = node.span(first)
   let node.Span(end:, ..) = node.span(last)
 

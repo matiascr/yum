@@ -5,8 +5,10 @@ internal_modules = [
   "yum/yaml/lexer/*",
   "yum/yaml/parser",
   "yum/yaml/parser/*",
+  "yum/yaml/document",
   "yum/yaml/dynamic",
   "yum/yaml/emitter",
+  "yum/yaml/resolver",
   "yum/yaml/token",
 ]
 

@@ -4,7 +4,7 @@ import gleam/option.{None, Some}
 import gleam/string
 import nibble.{type Parser, do, return}
 import yum/yaml/lexer/context.{type Context}
-import yum/yaml/node.{type YamlNode}
+import yum/yaml/node.{type Node}
 import yum/yaml/parser/span
 import yum/yaml/token.{type BlockScalarStyle, type Chomp, type Token}
 
@@ -21,7 +21,7 @@ type Line {
   Line(indent: Int, content: String, span: node.Span)
 }
 
-pub fn parser() -> Parser(YamlNode, Token, Context) {
+pub fn parser() -> Parser(Node, Token, Context) {
   use header <- do(header_parser())
   use lines <- do(nibble.many(line_parser()))
   let style = case header.style {

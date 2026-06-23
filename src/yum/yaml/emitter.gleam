@@ -3,14 +3,14 @@ import gleam/int
 import gleam/list
 import gleam/option.{Some}
 import gleam/string
-import yum/yaml/node.{type YamlNode}
+import yum/yaml/node.{type Node}
 import yum/yaml/parser/scalar
 
-pub fn to_string(value: YamlNode) -> String {
+pub fn to_string(value: Node) -> String {
   emit(value, 0)
 }
 
-fn emit(value: YamlNode, indent: Int) -> String {
+fn emit(value: Node, indent: Int) -> String {
   case node.kind(value) {
     node.Null -> "null"
     node.Bool(True) -> "true"
@@ -26,7 +26,7 @@ fn emit(value: YamlNode, indent: Int) -> String {
   }
 }
 
-fn emit_sequence(entries: List(YamlNode), indent: Int) -> String {
+fn emit_sequence(entries: List(Node), indent: Int) -> String {
   case entries {
     [] -> "[]"
     [_, ..] ->
@@ -42,7 +42,7 @@ fn emit_sequence(entries: List(YamlNode), indent: Int) -> String {
   }
 }
 
-fn emit_nested_sequence_entry(entry: YamlNode, indent: Int) -> String {
+fn emit_nested_sequence_entry(entry: Node, indent: Int) -> String {
   let nested_indent = indent + 2
 
   case string.split(emit(entry, nested_indent), "\n") {
@@ -56,7 +56,7 @@ fn emit_nested_sequence_entry(entry: YamlNode, indent: Int) -> String {
   }
 }
 
-fn emit_mapping(entries: List(#(YamlNode, YamlNode)), indent: Int) -> String {
+fn emit_mapping(entries: List(#(Node, Node)), indent: Int) -> String {
   case entries {
     [] -> "{}"
     [_, ..] ->
@@ -78,7 +78,7 @@ fn emit_mapping(entries: List(#(YamlNode, YamlNode)), indent: Int) -> String {
   }
 }
 
-fn emit_key(value: YamlNode) -> String {
+fn emit_key(value: Node) -> String {
   case node.kind(value) {
     node.String(value) -> emit_key_string(value)
     _ -> emit(value, 0)

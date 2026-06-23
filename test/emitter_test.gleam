@@ -1,5 +1,6 @@
+import yaml_ast as ast
+import yaml_helpers as helpers
 import yum/yaml
-import yum/yaml/ast
 import yum/yaml/builder.{bool, int, mapping, null, sequence, string}
 
 pub fn emitter_quotes_strings_that_would_parse_as_other_scalars_test() {
@@ -17,11 +18,14 @@ pub fn emitter_quotes_strings_that_would_parse_as_other_scalars_test() {
       string("~"),
     ])
 
-  let assert Ok(rendered) = yaml.to_string(document)
+  let assert Ok(rendered) =
+    document
+    |> yaml.from_node()
+    |> yaml.to_string()
 
   assert rendered
     == "- \"123\"\n- \"0o10\"\n- \"0x10\"\n- \"1.5\"\n- \".nan\"\n- \".inf\"\n- \"-.inf\"\n- \"true\"\n- \"null\"\n- \"~\""
-  assert yaml.parse_ast(rendered)
+  assert helpers.parse_ast(rendered)
     == ast.Sequence([
       ast.String("123"),
       ast.String("0o10"),
@@ -45,7 +49,9 @@ pub fn emitter_quotes_strings_with_mapping_indicators_test() {
       #(string("key:with:colon"), string("value")),
     ])
 
-  assert yaml.to_string(document)
+  assert document
+    |> yaml.from_node()
+    |> yaml.to_string()
     == "colon: \"a: b\"\nhash: \"a # b\"\n\"key:with:colon\": value"
     |> Ok
 }
@@ -59,7 +65,9 @@ pub fn emitter_quotes_empty_and_whitespace_sensitive_strings_test() {
       string(" "),
     ])
 
-  assert yaml.to_string(document)
+  assert document
+    |> yaml.from_node()
+    |> yaml.to_string()
     == "- \"\"\n- \" leading\"\n- \"trailing \"\n- \" \""
     |> Ok
 }
@@ -84,7 +92,9 @@ pub fn emitter_handles_nested_block_collections_test() {
       ),
     ])
 
-  assert yaml.to_string(document)
+  assert document
+    |> yaml.from_node()
+    |> yaml.to_string()
     == "jobs:\n  - name: test\n    steps:\n      - gleam test\n      - gleam format"
     |> Ok
 }
@@ -97,9 +107,12 @@ pub fn emitter_emits_non_string_scalar_keys_test() {
       #(null(), string("empty")),
     ])
 
-  let assert Ok(rendered) = yaml.to_string(document)
+  let assert Ok(rendered) =
+    document
+    |> yaml.from_node()
+    |> yaml.to_string()
 
-  assert yaml.parse_ast(rendered)
+  assert helpers.parse_ast(rendered)
     == ast.Mapping([
       #(ast.Int(1), ast.String("one")),
       #(ast.Bool(True), ast.String("yes")),

@@ -1,13 +1,14 @@
 import gleam/dynamic/decode
 import gleam/option
 import gleam/result
+import yaml_helpers as helpers
 import yum/yaml
 import yum/yaml/builder
 import yum/yaml/diagnostic
 import yum/yaml/node
 
-pub fn parse_node_exposes_kind_and_accessors_test() {
-  let assert Ok(document) = yaml.parse_node("name: \"yum\"\n")
+pub fn node_exposes_kind_and_accessors_test() {
+  let assert Ok(document) = helpers.parse_node("name: \"yum\"\n")
   let assert node.Mapping(entries) = node.kind(document)
   let assert [#(key, value)] = entries
 
@@ -21,7 +22,8 @@ pub fn parse_node_exposes_kind_and_accessors_test() {
 }
 
 pub fn get_retrieves_nested_mapping_values_test() {
-  let assert Ok(document) = yaml.parse_node("job:\n  script: [gleam, test]\n")
+  let assert Ok(document) =
+    helpers.parse_node("job:\n  script: [gleam, test]\n")
   let assert option.Some(script) =
     node.get(document, [
       node.Key("job"),
@@ -32,8 +34,8 @@ pub fn get_retrieves_nested_mapping_values_test() {
   assert node.as_string(command) == Ok("gleam")
 }
 
-pub fn parse_node_tracks_flow_collection_style_and_span_test() {
-  let assert Ok(document) = yaml.parse_node("commands: [gleam, test]\n")
+pub fn node_tracks_flow_collection_style_and_span_test() {
+  let assert Ok(document) = helpers.parse_node("commands: [gleam, test]\n")
   let assert option.Some(commands) = node.get(document, [node.Key("commands")])
 
   assert node.style(commands) == node.FlowSequence
@@ -41,8 +43,8 @@ pub fn parse_node_tracks_flow_collection_style_and_span_test() {
     == node.Span(start: node.Position(1, 11), end: node.Position(1, 24))
 }
 
-pub fn parse_node_tracks_block_scalar_style_and_span_test() {
-  let assert Ok(document) = yaml.parse_node("script: |\n  gleam test\n")
+pub fn node_tracks_block_scalar_style_and_span_test() {
+  let assert Ok(document) = helpers.parse_node("script: |\n  gleam test\n")
   let assert option.Some(script) = node.get(document, [node.Key("script")])
 
   assert node.style(script) == node.LiteralBlockScalar
@@ -73,7 +75,10 @@ pub fn builder_and_emitter_round_trip_test() {
       ),
     ])
 
-  let rendered = yaml.to_string(document)
+  let rendered =
+    document
+    |> yaml.from_node()
+    |> yaml.to_string()
 
   assert rendered == Ok("name: yum\ncommands:\n  - gleam\n  - test")
 }
@@ -84,9 +89,12 @@ pub fn to_string_validates_emitted_yaml_test() {
       #(builder.string("name"), builder.string("yum")),
     ])
 
-  let assert Ok(rendered) = yaml.to_string(document)
+  let assert Ok(rendered) =
+    document
+    |> yaml.from_node()
+    |> yaml.to_string()
 
-  assert yaml.parse_node(rendered) |> result.is_ok()
+  assert helpers.parse_node(rendered) |> result.is_ok()
 }
 
 pub fn get_index_rejects_negative_indexes_test() {
@@ -100,7 +108,7 @@ pub fn get_index_rejects_negative_indexes_test() {
 
 pub fn as_accessors_return_values_test() {
   let assert Ok(document) =
-    yaml.parse_node(
+    helpers.parse_node(
       "name: yum\ncount: 1\nactive: true\nratio: 1.5\nempty: null\n",
     )
   let assert option.Some(name) = node.get(document, [node.Key("name")])
@@ -118,7 +126,7 @@ pub fn as_accessors_return_values_test() {
 }
 
 pub fn as_accessors_return_typed_errors_test() {
-  let assert Ok(document) = yaml.parse_node("count: 1\n")
+  let assert Ok(document) = helpers.parse_node("count: 1\n")
   let assert option.Some(count) = node.get(document, [node.Key("count")])
 
   assert node.kind_name(count) == node.IntKind
@@ -130,9 +138,9 @@ pub fn as_accessors_return_typed_errors_test() {
     ))
 }
 
-pub fn parse_node_with_diagnostics_warns_for_duplicate_keys_test() {
-  let assert Ok(yaml.Parsed(value: document, diagnostics: [warning])) =
-    yaml.parse_node_with_diagnostics("name: one\nname: two\n")
+pub fn resolved_yaml_warns_for_duplicate_keys_test() {
+  let assert Ok(helpers.Parsed(value: document, diagnostics: [warning])) =
+    helpers.parse_node_with_diagnostics("name: one\nname: two\n")
 
   assert node.get(document, [node.Key("name")]) |> option.is_some()
   assert warning
@@ -153,8 +161,8 @@ pub fn parse_node_with_diagnostics_warns_for_duplicate_keys_test() {
 }
 
 pub fn diagnostics_collects_nested_duplicate_keys_test() {
-  let assert Ok(yaml.Parsed(diagnostics: [warning], ..)) =
-    yaml.parse_node_with_diagnostics("job:\n  script: one\n  script: two\n")
+  let assert Ok(helpers.Parsed(diagnostics: [warning], ..)) =
+    helpers.parse_node_with_diagnostics("job:\n  script: one\n  script: two\n")
 
   assert warning
     == diagnostic.DuplicateMappingKey(

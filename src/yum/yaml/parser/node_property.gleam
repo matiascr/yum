@@ -1,13 +1,13 @@
 import gleam/option.{None, Some}
 import nibble.{type Parser, do, return}
 import yum/yaml/lexer/context.{type Context}
-import yum/yaml/node.{type YamlNode}
+import yum/yaml/node.{type Node}
 import yum/yaml/parser/span
 import yum/yaml/token.{type Token}
 
 pub fn parser(
-  node_parser: Parser(YamlNode, Token, Context),
-) -> Parser(YamlNode, Token, Context) {
+  node_parser: Parser(Node, Token, Context),
+) -> Parser(Node, Token, Context) {
   nibble.one_of([
     alias_parser(),
     property_parser(node_parser),
@@ -15,8 +15,8 @@ pub fn parser(
 }
 
 fn property_parser(
-  node_parser: Parser(YamlNode, Token, Context),
-) -> Parser(YamlNode, Token, Context) {
+  node_parser: Parser(Node, Token, Context),
+) -> Parser(Node, Token, Context) {
   use properties <- do(nibble.many(property_token_parser()))
   use value <- do(node_parser)
 
@@ -40,7 +40,7 @@ fn property_token_parser() -> Parser(Property, Token, Context) {
   })
 }
 
-fn apply_properties(properties: List(Property), value: YamlNode) -> YamlNode {
+fn apply_properties(properties: List(Property), value: Node) -> Node {
   case properties {
     [] -> value
     [property, ..rest] -> {
@@ -50,14 +50,14 @@ fn apply_properties(properties: List(Property), value: YamlNode) -> YamlNode {
   }
 }
 
-fn apply_property(value: YamlNode, property: Property) -> YamlNode {
+fn apply_property(value: Node, property: Property) -> Node {
   case property {
     Anchor(anchor) -> node.with_anchor(value, anchor)
     Tag(tag) -> node.with_tag(value, tag)
   }
 }
 
-fn alias_parser() -> Parser(YamlNode, Token, Context) {
+fn alias_parser() -> Parser(Node, Token, Context) {
   use alias <- do(
     nibble.take_map("Expected an alias", fn(tok) {
       case tok {

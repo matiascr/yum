@@ -1,7 +1,7 @@
 import birdie
 import gleam/result
 import gleam/string
-import yum/yaml
+import yaml_helpers as helpers
 
 const test_file_prefix = "parser:flow_sequence:"
 
@@ -9,7 +9,7 @@ pub fn empty_flow_sequence_test() {
   let input = "[]"
 
   input
-  |> yaml.parse_ast()
+  |> helpers.parse_ast()
   |> snap(input, "empty_flow_sequence_test")
 }
 
@@ -17,7 +17,7 @@ pub fn simple_flow_sequence_test() {
   let input = "[one, two, three]"
 
   input
-  |> yaml.parse_ast()
+  |> helpers.parse_ast()
   |> snap(input, "simple_flow_sequence_test")
 }
 
@@ -25,7 +25,7 @@ pub fn trailing_comma_flow_sequence_test() {
   let input = "[one, two,]"
 
   input
-  |> yaml.parse_ast()
+  |> helpers.parse_ast()
   |> snap(input, "trailing_comma_flow_sequence_test")
 }
 
@@ -33,7 +33,7 @@ pub fn adjacent_entries_flow_sequence_test() {
   let input = "[one,two,three]"
 
   input
-  |> yaml.parse_ast()
+  |> helpers.parse_ast()
   |> snap(input, "adjacent_entries_flow_sequence_test")
 }
 
@@ -41,7 +41,7 @@ pub fn mixed_primitives_flow_sequence_test() {
   let input = "[null, true, false, 123, 1.5, .nan]"
 
   input
-  |> yaml.parse_ast()
+  |> helpers.parse_ast()
   |> snap(input, "mixed_primitives_flow_sequence_test")
 }
 
@@ -49,7 +49,7 @@ pub fn quoted_entries_flow_sequence_test() {
   let input = "[\"double quoted\", 'single ''quoted''']"
 
   input
-  |> yaml.parse_ast()
+  |> helpers.parse_ast()
   |> snap(input, "quoted_entries_flow_sequence_test")
 }
 
@@ -57,7 +57,7 @@ pub fn multiline_entries_flow_sequence_test() {
   let input = "[\"double\n quoted\", 'single\n quoted', plain\n text]"
 
   input
-  |> yaml.parse_ast()
+  |> helpers.parse_ast()
   |> snap(input, "multiline_entries_flow_sequence_test")
 }
 
@@ -65,7 +65,7 @@ pub fn nested_flow_sequence_test() {
   let input = "[one, [two, three], four]"
 
   input
-  |> yaml.parse_ast()
+  |> helpers.parse_ast()
   |> snap(input, "nested_flow_sequence_test")
 }
 
@@ -73,7 +73,7 @@ pub fn nested_empty_flow_sequence_test() {
   let input = "[[], [one], []]"
 
   input
-  |> yaml.parse_ast()
+  |> helpers.parse_ast()
   |> snap(input, "nested_empty_flow_sequence_test")
 }
 

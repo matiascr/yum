@@ -4,8 +4,7 @@
 //// available as a small forwarding wrapper.
 ////
 
-import yum/yaml
-import yum/yaml/ast.{type Yaml}
+import yum/yaml.{type Yaml}
 import yum/yaml/error.{type YamlError}
 
 /// Parses a YAML file into a YAML document.

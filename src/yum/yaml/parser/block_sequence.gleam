@@ -3,19 +3,19 @@ import gleam/option
 import gleam/result
 import nibble.{type Parser, do, return}
 import yum/yaml/lexer/context.{type Context}
-import yum/yaml/node.{type YamlNode}
+import yum/yaml/node.{type Node}
 import yum/yaml/parser/indentation
 import yum/yaml/parser/span
 import yum/yaml/token.{type Token}
 
 type Entry {
-  Entry(value: YamlNode, marker_span: node.Span)
+  Entry(value: Node, marker_span: node.Span)
 }
 
 pub fn parser(
   indent: Int,
-  node_parser: fn(Int) -> Parser(YamlNode, Token, Context),
-) -> Parser(YamlNode, Token, Context) {
+  node_parser: fn(Int) -> Parser(Node, Token, Context),
+) -> Parser(Node, Token, Context) {
   use entries <- do(nibble.sequence(
     sequence_entry_parser(indent, node_parser),
     separator: indentation.block_separator_parser(indent),
@@ -32,7 +32,7 @@ pub fn parser(
 
 fn sequence_entry_parser(
   indent: Int,
-  node_parser: fn(Int) -> Parser(YamlNode, Token, Context),
+  node_parser: fn(Int) -> Parser(Node, Token, Context),
 ) -> Parser(Entry, Token, Context) {
   use _ <- do(nibble.token(token.Hyphen))
   use marker_span <- do(nibble.span())
@@ -46,7 +46,7 @@ fn sequence_entry_parser(
   |> return
 }
 
-fn sequence_node(entries: List(Entry)) -> YamlNode {
+fn sequence_node(entries: List(Entry)) -> Node {
   let values = entries |> list.map(fn(entry) { entry.value })
   let assert [first, ..] = entries
   let last = entries |> list.last() |> result.unwrap(first)
@@ -65,7 +65,7 @@ fn entry_span(first: Entry, last: Entry) -> node.Span {
   node.Span(start:, end:)
 }
 
-fn null_at(span: node.Span) -> YamlNode {
+fn null_at(span: node.Span) -> Node {
   node.new(node.Null, span:, style: node.Synthetic)
 }
 

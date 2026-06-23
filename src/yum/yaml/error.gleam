@@ -1,7 +1,7 @@
 //// Errors returned by YAML parsing.
 ////
 //// Import this module when you need to pattern match on parsing failures from
-//// [`yum/yaml.parse`](../yaml.html#parse) or [`yum/yaml.parse_ast`](../yaml.html#parse_ast).
+//// [`yum/yaml.parse`](../yaml.html#parse).
 ////
 
 import nibble
@@ -10,11 +10,22 @@ import yum/yaml/lexer/context.{type Context}
 import yum/yaml/token.{type Token}
 
 pub type YamlError {
+  /// Input indentation could not be normalized before lexing.
   IndentNormalizationError
+
+  /// The lexer could not match the input at the given row and column.
   LexerError(row: Int, col: Int, lexeme: String)
+
+  /// A single-document API was given a stream with more than one document.
   MultipleDocuments
+
+  /// The parser reached the end of input before a complete document was found.
   UnexpectedEndOfInput
+
+  /// The parser found a token that was not valid in the current position.
   UnexpectedToken(token: Token, row: Int, col: Int)
+
+  /// Any parser error that does not map cleanly to a more specific variant.
   Other(nibble.Error(Token))
 }
 
@@ -41,8 +52,8 @@ fn from_problem(problem: nibble.Error(Token), pos: lexer.Span) -> YamlError {
     // nibble.Custom is reserved for semantic errors threaded out via
     // parser user state — see Issues. This branch should not be reached
     // through from_parse_errors in normal operation.
-    nibble.Custom(_) -> UnexpectedEndOfInput
-    nibble.BadParser(_) -> Other(problem)
-    nibble.Expected(_, _) -> Other(problem)
+    nibble.Custom(..) -> UnexpectedEndOfInput
+    nibble.BadParser(..) -> Other(problem)
+    nibble.Expected(..) -> Other(problem)
   }
 }

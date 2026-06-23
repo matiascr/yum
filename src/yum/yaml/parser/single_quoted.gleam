@@ -2,12 +2,12 @@ import gleam/option.{None, Some}
 import gleam/string
 import nibble.{type Parser, do, return}
 import yum/yaml/lexer/context.{type Context}
-import yum/yaml/node.{type YamlNode}
+import yum/yaml/node.{type Node}
 import yum/yaml/parser/double_quoted
 import yum/yaml/parser/span
 import yum/yaml/token.{type Token}
 
-pub fn parser() -> Parser(YamlNode, Token, Context) {
+pub fn parser() -> Parser(Node, Token, Context) {
   use _ <- do(nibble.token(token.SingleQuote))
   use start <- do(nibble.span())
   use parts <- do(
@@ -38,17 +38,17 @@ pub fn parser() -> Parser(YamlNode, Token, Context) {
         | token.At
         | token.GraveAccent
         | token.LineBreak
-        | token.Indentation(_)
-        | token.DoubleQuotedScalar(_)
-        | token.MappingKey(_)
-        | token.PlainScalar(_)
-        | token.Anchor(_)
-        | token.Alias(_)
-        | token.Tag(_)
-        | token.BlockScalarHeader(_, _, _)
-        | token.BlockScalarLine(_, _)
-        | token.Directive(_, _)
-        | token.Escape(_)
+        | token.Indentation(..)
+        | token.DoubleQuotedScalar(..)
+        | token.MappingKey(..)
+        | token.PlainScalar(..)
+        | token.Anchor(..)
+        | token.Alias(..)
+        | token.Tag(..)
+        | token.BlockScalarHeader(..)
+        | token.BlockScalarLine(..)
+        | token.Directive(..)
+        | token.Escape(..)
         | token.InvalidEscape -> None
       }
     }),

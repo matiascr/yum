@@ -1,18 +1,19 @@
+import yaml_ast
+import yaml_helpers as helpers
 import yum/yaml
-import yum/yaml/ast as yaml_ast
 
-pub fn parse_wraps_ast_in_document_test() {
+pub fn parse_returns_raw_yaml_document_test() {
   let assert Ok(document) = yaml.parse("hello")
 
-  assert yaml_ast.contents(document) == yaml_ast.String("hello")
-  assert yaml_ast.directives(document) == []
+  assert document |> yaml.root() |> helpers.to_ast() == yaml_ast.String("hello")
+  assert yaml.directives(document) == []
 }
 
-pub fn parse_stream_wraps_each_ast_in_document_test() {
+pub fn parse_stream_returns_raw_yaml_documents_test() {
   let assert Ok([one, two]) = yaml.parse_stream("---\none\n---\ntwo")
 
-  assert yaml_ast.contents(one) == yaml_ast.String("one")
-  assert yaml_ast.directives(one) == []
-  assert yaml_ast.contents(two) == yaml_ast.String("two")
-  assert yaml_ast.directives(two) == []
+  assert one |> yaml.root() |> helpers.to_ast() == yaml_ast.String("one")
+  assert yaml.directives(one) == []
+  assert two |> yaml.root() |> helpers.to_ast() == yaml_ast.String("two")
+  assert yaml.directives(two) == []
 }

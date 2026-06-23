@@ -6,7 +6,7 @@ import nibble/lexer
 import yum/yaml/document.{type Document}
 import yum/yaml/error.{type YamlError}
 import yum/yaml/lexer/context.{type Context}
-import yum/yaml/node.{type YamlNode}
+import yum/yaml/node.{type Node}
 import yum/yaml/parser/block_collection
 import yum/yaml/parser/block_scalar
 import yum/yaml/parser/double_quoted
@@ -18,7 +18,7 @@ import yum/yaml/parser/single_quoted
 import yum/yaml/parser/span
 import yum/yaml/token.{type Token}
 
-pub fn parse(tokens: List(lexer.Token(Token))) -> Result(YamlNode, YamlError) {
+pub fn parse(tokens: List(lexer.Token(Token))) -> Result(Node, YamlError) {
   use documents <- result.try(parse_stream(tokens))
 
   case documents {
@@ -42,7 +42,7 @@ pub fn parse_document(
 
 pub fn parse_stream(
   tokens: List(lexer.Token(Token)),
-) -> Result(List(YamlNode), YamlError) {
+) -> Result(List(Node), YamlError) {
   tokens
   |> parse_document_stream()
   |> result.map(list.map(_, document.root))
@@ -169,11 +169,11 @@ fn directive_parser() -> Parser(document.Directive, Token, Context) {
   |> return
 }
 
-fn default_parser() -> Parser(YamlNode, Token, Context) {
+fn default_parser() -> Parser(Node, Token, Context) {
   node_property.parser(bare_node_parser())
 }
 
-fn bare_node_parser() -> Parser(YamlNode, Token, Context) {
+fn bare_node_parser() -> Parser(Node, Token, Context) {
   nibble.one_of([
     block_collection.parser(),
     block_scalar.parser(),
@@ -184,6 +184,6 @@ fn bare_node_parser() -> Parser(YamlNode, Token, Context) {
   ])
 }
 
-fn null_at(span: node.Span) -> YamlNode {
+fn null_at(span: node.Span) -> Node {
   node.new(node.Null, span:, style: node.Synthetic)
 }

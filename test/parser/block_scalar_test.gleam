@@ -1,7 +1,7 @@
 import birdie
 import gleam/result
 import gleam/string
-import yum/yaml
+import yaml_helpers as helpers
 
 const test_file_prefix = "parser:block_scalar:"
 
@@ -9,7 +9,7 @@ pub fn literal_clip_block_scalar_test() {
   let input = "|\n  line one\n  line two\n"
 
   input
-  |> yaml.parse_ast()
+  |> helpers.parse_ast()
   |> snap(input, "literal_clip_block_scalar_test")
 }
 
@@ -17,7 +17,7 @@ pub fn literal_strip_block_scalar_test() {
   let input = "|-\n  line one\n  line two\n"
 
   input
-  |> yaml.parse_ast()
+  |> helpers.parse_ast()
   |> snap(input, "literal_strip_block_scalar_test")
 }
 
@@ -25,7 +25,7 @@ pub fn literal_keep_block_scalar_test() {
   let input = "|+\n  line one\n  line two\n\n"
 
   input
-  |> yaml.parse_ast()
+  |> helpers.parse_ast()
   |> snap(input, "literal_keep_block_scalar_test")
 }
 
@@ -33,7 +33,7 @@ pub fn folded_clip_block_scalar_test() {
   let input = ">\n  line one\n  line two\n\n  line four\n"
 
   input
-  |> yaml.parse_ast()
+  |> helpers.parse_ast()
   |> snap(input, "folded_clip_block_scalar_test")
 }
 
@@ -41,7 +41,7 @@ pub fn nested_mapping_block_scalar_test() {
   let input = "outer:\n  literal: |\n    line one\n    line two\n  next: value"
 
   input
-  |> yaml.parse_ast()
+  |> helpers.parse_ast()
   |> snap(input, "nested_mapping_block_scalar_test")
 }
 
@@ -49,7 +49,7 @@ pub fn sequence_block_scalar_test() {
   let input = "- |\n  first\n  second\n- >-\n  third\n  fourth"
 
   input
-  |> yaml.parse_ast()
+  |> helpers.parse_ast()
   |> snap(input, "sequence_block_scalar_test")
 }
 
@@ -57,7 +57,7 @@ pub fn preserves_extra_indentation_block_scalar_test() {
   let input = "|\n  line one\n    indented\n  line three\n"
 
   input
-  |> yaml.parse_ast()
+  |> helpers.parse_ast()
   |> snap(input, "preserves_extra_indentation_block_scalar_test")
 }
 

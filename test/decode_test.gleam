@@ -51,15 +51,6 @@ pub fn decode_at_retrieves_nested_sequence_values_test() {
     == Ok(["gleam test", "gleam format"])
 }
 
-pub fn to_dynamic_works_with_dynamic_decoders_test() {
-  let assert Ok(document) = yaml.parse_node("job:\n  count: 2\n")
-
-  assert document
-    |> yaml.to_dynamic
-    |> decode.run(decode.at(["job", "count"], decode.int))
-    == Ok(2)
-}
-
 pub fn decode_returns_type_failures_from_dynamic_decoder_test() {
   let decoder = {
     use count <- decode.field("count", decode.int)

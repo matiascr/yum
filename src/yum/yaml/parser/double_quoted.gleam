@@ -6,7 +6,7 @@ import gleam/result
 import gleam/string
 import nibble.{type Parser, do, return}
 import yum/yaml/lexer/context.{type Context}
-import yum/yaml/node.{type YamlNode}
+import yum/yaml/node.{type Node}
 import yum/yaml/parser/span
 import yum/yaml/token.{type Token}
 
@@ -18,7 +18,7 @@ type DoubleQuotedElement {
   EscapedLineBreak
 }
 
-pub fn parser() -> Parser(YamlNode, Token, Context) {
+pub fn parser() -> Parser(Node, Token, Context) {
   use _ <- do(nibble.token(token.DoubleQuote))
   use start <- do(nibble.span())
   use elements <- do(

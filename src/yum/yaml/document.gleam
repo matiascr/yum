@@ -1,23 +1,29 @@
-//// Parsed YAML documents.
+//// Parser document internals.
 ////
-//// A document contains the root YAML node plus document-level metadata such as
-//// directives. Use `yum/yaml.parse_document` when tooling needs this metadata.
+//// Most callers should use the opaque [`yum/yaml.Yaml`](../yaml.html#Yaml)
+//// type. This module contains the parser's document representation before it
+//// is wrapped in the public raw/resolved YAML API.
 
-import yum/yaml/node.{type Span, type YamlNode}
+import yum/yaml/node.{type Node, type Span}
 
 pub opaque type Document {
-  Document(root: YamlNode, directives: List(Directive))
+  Document(root: Node, directives: List(Directive))
 }
 
+/// A YAML directive from the beginning of a document.
+///
+/// Directives are preserved for tooling and semantic resolution. For example,
+/// a TAG directive contributes a tag handle that resolution can use.
 pub type Directive {
+  /// The directive name, its whitespace-separated parameters, and source span.
   Directive(name: String, parameters: List(String), span: Span)
 }
 
-pub fn new(root root: YamlNode, directives directives: List(Directive)) {
+pub fn new(root root: Node, directives directives: List(Directive)) {
   Document(root:, directives:)
 }
 
-pub fn root(document: Document) -> YamlNode {
+pub fn root(document: Document) -> Node {
   document.root
 }
 

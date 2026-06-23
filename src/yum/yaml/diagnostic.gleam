@@ -5,10 +5,17 @@ import gleam/float
 import gleam/int
 import gleam/list
 import gleam/option.{type Option, None, Some}
-import yum/yaml/node.{type Span, type YamlNode}
+import yum/yaml/node.{type Node, type Span}
 
 pub type Severity {
+  /// A non-fatal diagnostic.
+  ///
+  /// Resolution can still succeed when a diagnostic has this severity.
   Warning
+
+  /// A fatal diagnostic.
+  ///
+  /// Resolution returns an error when any diagnostic has this severity.
   DiagnosticError
 }
 
@@ -20,15 +27,15 @@ pub type Related {
 pub type Diagnostic {
   /// A mapping contains the same scalar key more than once.
   ///
-  /// `duplicate` is the repeated key's span. `original` is the first matching
-  /// key's span.
+  /// The duplicate span points at the repeated key. The original span points
+  /// at the first matching key.
   DuplicateMappingKey(key: String, duplicate: Span, original: Span)
 
   /// An alias references an anchor that has not been seen earlier in the
   /// document.
   UnknownAlias(alias: String, span: Span)
 
-  /// A `%TAG` directive is malformed.
+  /// A TAG directive is malformed.
   InvalidTagDirective(span: Span)
 
   /// A node tag uses a handle that has not been declared for the document.
@@ -41,15 +48,15 @@ type SeenKey {
 
 /// Collects non-fatal diagnostics for a parsed YAML node tree.
 ///
-pub fn collect(value: YamlNode) -> List(Diagnostic) {
+pub fn collect(value: Node) -> List(Diagnostic) {
   let #(_, diagnostics) = collect_with_anchors(value, dict.new())
   diagnostics
 }
 
 fn collect_with_anchors(
-  value: YamlNode,
-  anchors: Dict(String, YamlNode),
-) -> #(Dict(String, YamlNode), List(Diagnostic)) {
+  value: Node,
+  anchors: Dict(String, Node),
+) -> #(Dict(String, Node), List(Diagnostic)) {
   let #(anchors, property_diagnostics) = collect_node_properties(value, anchors)
 
   let #(anchors, nested_diagnostics) = case node.kind(value) {
@@ -64,9 +71,9 @@ fn collect_with_anchors(
 }
 
 fn collect_node_properties(
-  value: YamlNode,
-  anchors: Dict(String, YamlNode),
-) -> #(Dict(String, YamlNode), List(Diagnostic)) {
+  value: Node,
+  anchors: Dict(String, Node),
+) -> #(Dict(String, Node), List(Diagnostic)) {
   let diagnostics = case node.alias(value) {
     Some(alias) ->
       case dict.has_key(anchors, alias) {
@@ -85,9 +92,9 @@ fn collect_node_properties(
 }
 
 fn collect_mapping_entries(
-  entries: List(#(YamlNode, YamlNode)),
-  anchors: Dict(String, YamlNode),
-) -> #(Dict(String, YamlNode), List(Diagnostic)) {
+  entries: List(#(Node, Node)),
+  anchors: Dict(String, Node),
+) -> #(Dict(String, Node), List(Diagnostic)) {
   let #(anchors, nested_diagnostics) =
     list.fold(entries, #(anchors, []), fn(acc, entry) {
       let #(anchors, diagnostics) = acc
@@ -111,9 +118,9 @@ fn collect_mapping_entries(
 }
 
 fn collect_sequence_entries(
-  entries: List(YamlNode),
-  anchors: Dict(String, YamlNode),
-) -> #(Dict(String, YamlNode), List(Diagnostic)) {
+  entries: List(Node),
+  anchors: Dict(String, Node),
+) -> #(Dict(String, Node), List(Diagnostic)) {
   list.fold(entries, #(anchors, []), fn(acc, entry) {
     let #(anchors, diagnostics) = acc
     let #(anchors, entry_diagnostics) = collect_with_anchors(entry, anchors)
@@ -122,9 +129,7 @@ fn collect_sequence_entries(
   })
 }
 
-fn duplicate_key_diagnostics(
-  entries: List(#(YamlNode, YamlNode)),
-) -> List(Diagnostic) {
+fn duplicate_key_diagnostics(entries: List(#(Node, Node))) -> List(Diagnostic) {
   let #(_, diagnostics) =
     list.fold(entries, #(dict.new(), []), fn(acc, entry) {
       let #(seen, diagnostics) = acc
@@ -153,7 +158,7 @@ fn duplicate_key_diagnostics(
   list.reverse(diagnostics)
 }
 
-fn duplicate_key_diagnostic(duplicate: YamlNode, first: SeenKey) -> Diagnostic {
+fn duplicate_key_diagnostic(duplicate: Node, first: SeenKey) -> Diagnostic {
   DuplicateMappingKey(
     key: first.label,
     duplicate: node.span(duplicate),
@@ -248,7 +253,7 @@ pub fn related_span(related: Related) -> Span {
   }
 }
 
-fn key_identity(key: YamlNode) -> Option(String) {
+fn key_identity(key: Node) -> Option(String) {
   case node.kind(key) {
     node.Null -> Some("null:")
     node.Bool(value) -> Some("bool:" <> bool_identity(value))
@@ -262,7 +267,7 @@ fn key_identity(key: YamlNode) -> Option(String) {
   }
 }
 
-fn key_label(key: YamlNode) -> String {
+fn key_label(key: Node) -> String {
   case node.kind(key) {
     node.Null -> "null"
     node.Bool(value) -> bool_identity(value)

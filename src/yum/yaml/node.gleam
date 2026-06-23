@@ -6,30 +6,72 @@
 
 import gleam/list
 import gleam/option.{type Option, None, Some}
-import yum/yaml/ast.{type YamlAST}
 
-pub opaque type YamlNode {
-  YamlNode(
-    kind: YamlKind,
+pub opaque type Node {
+  Node(
+    kind: Kind,
     span: Span,
-    style: YamlStyle,
+    style: Style,
     tag: Option(String),
     anchor: Option(String),
     alias: Option(String),
   )
 }
 
-pub type YamlKind {
+/// The semantic kind of a YAML node.
+///
+/// This describes the value after scalar parsing, not necessarily the exact
+/// source spelling. Use [`style`](#style) when source presentation matters.
+pub type Kind {
+  /// A YAML null value.
+  ///
+  /// Example YAML: `null`
   Null
+
+  /// A boolean scalar.
+  ///
+  /// Example YAML: `true`
   Bool(Bool)
+
+  /// An integer scalar.
+  ///
+  /// Example YAML: `42`
   Int(Int)
+
+  /// A finite floating-point scalar.
+  ///
+  /// Example YAML: `3.14`
   Float(Float)
+
+  /// Positive infinity.
+  ///
+  /// Example YAML: `.inf`
   PosInf
+
+  /// Negative infinity.
+  ///
+  /// Example YAML: `-.inf`
   NegInf
+
+  /// Not-a-number.
+  ///
+  /// Example YAML: `.nan`
   Nan
+
+  /// A string scalar.
+  ///
+  /// Example YAML: `hello`
   String(String)
-  Sequence(List(YamlNode))
-  Mapping(List(#(YamlNode, YamlNode)))
+
+  /// A YAML sequence.
+  ///
+  /// Example YAML: `- one`
+  Sequence(List(Node))
+
+  /// A YAML mapping.
+  ///
+  /// Example YAML: `name: yum`
+  Mapping(List(#(Node, Node)))
 }
 
 /// A lightweight name for a YAML node kind.
@@ -37,15 +79,34 @@ pub type YamlKind {
 /// This is useful in diagnostics and access errors where carrying the full node
 /// value would be noisy.
 pub type KindName {
+  /// The lightweight name for [`Null`](#YamlKind).
   NullKind
+
+  /// The lightweight name for [`Bool`](#YamlKind).
   BoolKind
+
+  /// The lightweight name for [`Int`](#YamlKind).
   IntKind
+
+  /// The lightweight name for [`Float`](#YamlKind).
   FloatKind
+
+  /// The lightweight name for [`PosInf`](#YamlKind).
   PosInfKind
+
+  /// The lightweight name for [`NegInf`](#YamlKind).
   NegInfKind
+
+  /// The lightweight name for [`Nan`](#YamlKind).
   NanKind
+
+  /// The lightweight name for [`String`](#YamlKind).
   StringKind
+
+  /// The lightweight name for [`Sequence`](#YamlKind).
   SequenceKind
+
+  /// The lightweight name for [`Mapping`](#YamlKind).
   MappingKind
 }
 
@@ -56,23 +117,95 @@ pub type AccessError {
   ExpectedKind(expected: KindName, found: KindName, span: Span)
 }
 
-pub type YamlStyle {
+/// The source style used to write a YAML node.
+///
+/// Style records presentation details that are useful for tooling and
+/// diagnostics. It does not change the semantic [`YamlKind`](#YamlKind).
+pub type Style {
+  /// A plain scalar with no quotes or block marker.
+  ///
+  /// Example YAML:
+  /// ```yaml
+  /// hello
+  /// ```
   PlainScalar
+
+  /// A single-quoted scalar.
+  ///
+  /// Example YAML:
+  /// ```yaml
+  /// 'hello'
+  /// ```
   SingleQuotedScalar
+
+  /// A double-quoted scalar.
+  ///
+  /// Example YAML:
+  /// ```yaml
+  /// "hello"
+  /// ```
   DoubleQuotedScalar
+
+  /// A literal block scalar introduced with the vertical bar marker.
+  ///
+  /// Example YAML:
+  /// ```yaml
+  /// script: |
+  ///   hello
+  /// ```
   LiteralBlockScalar
+
+  /// A folded block scalar introduced with the greater-than marker.
+  ///
+  /// Example YAML:
+  /// ```yaml
+  /// description: >
+  ///   hello
+  /// ```
   FoldedBlockScalar
+
+  /// A block-style sequence.
+  ///
+  /// Example YAML:
+  /// ```yaml
+  /// - one
+  /// ```
   BlockSequence
+
+  /// A flow-style sequence.
+  ///
+  /// Example YAML:
+  /// ```yaml
+  /// [one, two]
+  /// ```
   FlowSequence
+
+  /// A block-style mapping.
+  ///
+  /// Example YAML:
+  /// ```yaml
+  /// name: yum
+  /// ```
   BlockMapping
+
+  /// A flow-style mapping.
+  ///
+  /// Example YAML:
+  /// ```yaml
+  /// {name: yum}
+  /// ```
   FlowMapping
+
+  /// A generated node with no original source spelling.
+  ///
+  /// Builder-created nodes use this style.
   Synthetic
 }
 
 /// A half-open source span for a parsed YAML node.
 ///
 /// Parsed spans use 1-based row and column positions. Builder-created nodes use
-/// `synthetic_span`.
+/// [`synthetic_span`](#synthetic_span).
 pub type Span {
   Span(start: Position, end: Position)
 }
@@ -84,24 +217,29 @@ pub type Position {
 }
 
 pub type PathSegment {
+  /// Selects a value from a mapping by string key.
+  ///
+  /// Example path segment for YAML name: yum is Key("name").
   Key(String)
+
+  /// Selects a value from a sequence by zero-based index.
+  ///
+  /// Example path segment for the first item is Index(0).
   Index(Int)
 }
 
 /// Creates a YAML node with explicit metadata.
 ///
-/// Most callers should prefer `yum/yaml.parse_node` for parsed input or
-/// `yum/yaml/builder` for generated YAML. This constructor is public for tools
-/// that need to synthesize nodes while preserving their own source metadata.
-pub fn new(
-  kind: YamlKind,
-  span span: Span,
-  style style: YamlStyle,
-) -> YamlNode {
-  YamlNode(kind:, span:, style:, tag: None, anchor: None, alias: None)
+/// Most callers should prefer [`yum/yaml.parse`](../yaml.html#parse) plus
+/// [`yum/yaml.root`](../yaml.html#root) for parsed input or
+/// [`yum/yaml/builder`](./builder.html) for generated YAML. This constructor is
+/// public for tools that need to synthesize nodes while preserving their own
+/// source metadata.
+pub fn new(kind: Kind, span span: Span, style style: Style) -> Node {
+  Node(kind:, span:, style:, tag: None, anchor: None, alias: None)
 }
 
-pub fn synthetic(kind: YamlKind) -> YamlNode {
+pub fn synthetic(kind: Kind) -> Node {
   new(kind, span: synthetic_span(), style: Synthetic)
 }
 
@@ -111,107 +249,105 @@ pub fn synthetic_span() -> Span {
   Span(start: Position(0, 0), end: Position(0, 0))
 }
 
-pub fn kind(node: YamlNode) -> YamlKind {
+pub fn kind(node: Node) -> Kind {
   node.kind
 }
 
 /// Returns the node kind without its associated value.
 ///
-pub fn kind_name(node: YamlNode) -> KindName {
+pub fn kind_name(node: Node) -> KindName {
   node.kind
   |> kind_name_of
 }
 
-pub fn span(node: YamlNode) -> Span {
+pub fn span(node: Node) -> Span {
   node.span
 }
 
-pub fn style(node: YamlNode) -> YamlStyle {
+pub fn style(node: Node) -> Style {
   node.style
 }
 
-pub fn tag(node: YamlNode) -> Option(String) {
+pub fn tag(node: Node) -> Option(String) {
   node.tag
 }
 
-pub fn anchor(node: YamlNode) -> Option(String) {
+pub fn anchor(node: Node) -> Option(String) {
   node.anchor
 }
 
-pub fn alias(node: YamlNode) -> Option(String) {
+pub fn alias(node: Node) -> Option(String) {
   node.alias
 }
 
 /// Returns a copy of the node with tag metadata.
 ///
-pub fn with_tag(node: YamlNode, tag: String) -> YamlNode {
-  YamlNode(..node, tag: Some(tag))
+pub fn with_tag(node: Node, tag: String) -> Node {
+  Node(..node, tag: Some(tag))
 }
 
 /// Returns a copy of the node with anchor metadata.
 ///
-pub fn with_anchor(node: YamlNode, anchor: String) -> YamlNode {
-  YamlNode(..node, anchor: Some(anchor))
+pub fn with_anchor(node: Node, anchor: String) -> Node {
+  Node(..node, anchor: Some(anchor))
 }
 
 /// Returns a copy of the node with alias metadata.
 ///
-pub fn with_alias(node: YamlNode, alias: String) -> YamlNode {
-  YamlNode(..node, alias: Some(alias))
+pub fn with_alias(node: Node, alias: String) -> Node {
+  Node(..node, alias: Some(alias))
 }
 
-pub fn as_mapping(
-  node: YamlNode,
-) -> Result(List(#(YamlNode, YamlNode)), AccessError) {
+pub fn as_mapping(node: Node) -> Result(List(#(Node, Node)), AccessError) {
   case node.kind {
     Mapping(entries) -> Ok(entries)
     _ -> Error(expected(node, to_be: MappingKind))
   }
 }
 
-pub fn as_sequence(node: YamlNode) -> Result(List(YamlNode), AccessError) {
+pub fn as_sequence(node: Node) -> Result(List(Node), AccessError) {
   case node.kind {
     Sequence(entries) -> Ok(entries)
     _ -> Error(expected(node, to_be: SequenceKind))
   }
 }
 
-pub fn as_string(node: YamlNode) -> Result(String, AccessError) {
+pub fn as_string(node: Node) -> Result(String, AccessError) {
   case node.kind {
     String(value) -> Ok(value)
     _ -> Error(expected(node, to_be: StringKind))
   }
 }
 
-pub fn as_bool(node: YamlNode) -> Result(Bool, AccessError) {
+pub fn as_bool(node: Node) -> Result(Bool, AccessError) {
   case node.kind {
     Bool(value) -> Ok(value)
     _ -> Error(expected(node, to_be: BoolKind))
   }
 }
 
-pub fn as_int(node: YamlNode) -> Result(Int, AccessError) {
+pub fn as_int(node: Node) -> Result(Int, AccessError) {
   case node.kind {
     Int(value) -> Ok(value)
     _ -> Error(expected(node, to_be: IntKind))
   }
 }
 
-pub fn as_float(node: YamlNode) -> Result(Float, AccessError) {
+pub fn as_float(node: Node) -> Result(Float, AccessError) {
   case node.kind {
     Float(value) -> Ok(value)
     _ -> Error(expected(node, to_be: FloatKind))
   }
 }
 
-pub fn as_null(node: YamlNode) -> Result(Nil, AccessError) {
+pub fn as_null(node: Node) -> Result(Nil, AccessError) {
   case node.kind {
     Null -> Ok(Nil)
     _ -> Error(expected(node, to_be: NullKind))
   }
 }
 
-pub fn get(node: YamlNode, path: List(PathSegment)) -> Option(YamlNode) {
+pub fn get(node: Node, path: List(PathSegment)) -> Option(Node) {
   case path {
     [] -> Some(node)
     [Key(key), ..rest] -> {
@@ -223,7 +359,7 @@ pub fn get(node: YamlNode, path: List(PathSegment)) -> Option(YamlNode) {
   }
 }
 
-pub fn get_key(node: YamlNode, key: String) -> Option(YamlNode) {
+pub fn get_key(node: Node, key: String) -> Option(Node) {
   case as_mapping(node) {
     Ok(entries) ->
       entries
@@ -239,7 +375,7 @@ pub fn get_key(node: YamlNode, key: String) -> Option(YamlNode) {
   }
 }
 
-pub fn get_index(node: YamlNode, index: Int) -> Option(YamlNode) {
+pub fn get_index(node: Node, index: Int) -> Option(Node) {
   case index < 0 {
     True -> None
     False -> {
@@ -255,54 +391,11 @@ pub fn get_index(node: YamlNode, index: Int) -> Option(YamlNode) {
   }
 }
 
-pub fn to_ast(node: YamlNode) -> YamlAST {
-  case node.kind {
-    Null -> ast.Null
-    Bool(value) -> ast.Bool(value)
-    Int(value) -> ast.Int(value)
-    Float(value) -> ast.Float(value)
-    PosInf -> ast.PosInf
-    NegInf -> ast.NegInf
-    Nan -> ast.Nan
-    String(value) -> ast.String(value)
-    Sequence(entries) -> ast.Sequence(list.map(entries, to_ast))
-    Mapping(entries) ->
-      entries
-      |> list.map(fn(entry) {
-        let #(key, value) = entry
-        #(to_ast(key), to_ast(value))
-      })
-      |> ast.Mapping
-  }
-}
-
-pub fn from_ast(value: YamlAST) -> YamlNode {
-  case value {
-    ast.Null -> synthetic(Null)
-    ast.Bool(value) -> synthetic(Bool(value))
-    ast.Int(value) -> synthetic(Int(value))
-    ast.Float(value) -> synthetic(Float(value))
-    ast.PosInf -> synthetic(PosInf)
-    ast.NegInf -> synthetic(NegInf)
-    ast.Nan -> synthetic(Nan)
-    ast.String(value) -> synthetic(String(value))
-    ast.Sequence(entries) -> synthetic(Sequence(list.map(entries, from_ast)))
-    ast.Mapping(entries) ->
-      entries
-      |> list.map(fn(entry) {
-        let #(key, value) = entry
-        #(from_ast(key), from_ast(value))
-      })
-      |> Mapping
-      |> synthetic()
-  }
-}
-
-fn expected(node: YamlNode, to_be kind: KindName) -> AccessError {
+fn expected(node: Node, to_be kind: KindName) -> AccessError {
   ExpectedKind(expected: kind, found: kind_name(node), span: node.span)
 }
 
-fn kind_name_of(kind: YamlKind) -> KindName {
+fn kind_name_of(kind: Kind) -> KindName {
   case kind {
     Null -> NullKind
     Bool(_) -> BoolKind

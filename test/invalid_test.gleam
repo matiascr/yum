@@ -1,5 +1,5 @@
 import gleam/result
-import yum/yaml
+import yaml_helpers as helpers
 
 pub fn unclosed_double_quoted_scalar_fails_test() {
   assert_fails("\"unterminated")
@@ -62,5 +62,5 @@ pub fn mapping_block_scalar_unindented_content_fails_test() {
 }
 
 fn assert_fails(input: String) {
-  assert input |> yaml.parse_ast() |> result.is_error()
+  assert input |> helpers.parse_ast() |> result.is_error()
 }
