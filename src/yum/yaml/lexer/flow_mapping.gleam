@@ -1,7 +1,9 @@
+import gleam/option
 import gleam/string
 import nibble/lexer.{type Matcher}
 import yum/yaml/lexer/context.{type Context}
 import yum/yaml/lexer/flow_collection
+import yum/yaml/lexer/node_property
 import yum/yaml/token.{type Token}
 
 pub fn lexer() -> Matcher(Token, Context) {
@@ -28,9 +30,13 @@ pub fn lexer() -> Matcher(Token, Context) {
     }
     _, ":" -> lexer.Skip
     _, " " | _, "\t" | _, "\r" | _, "\n" ->
-      case string.ends_with(lexeme, ":") {
-        True -> flow_collection.keep_plain_scalar(lexeme, ctx)
-        False -> lexer.Skip
+      case node_property.token(lexeme) {
+        option.Some(token) -> token |> lexer.Keep(ctx)
+        option.None ->
+          case string.ends_with(lexeme, ":") {
+            True -> flow_collection.keep_plain_scalar(lexeme, ctx)
+            False -> lexer.Skip
+          }
       }
     _, "}" | _, "," | _, "[" | _, "{" | _, "\"" | _, "'" ->
       flow_collection.keep_plain_scalar(lexeme, ctx)

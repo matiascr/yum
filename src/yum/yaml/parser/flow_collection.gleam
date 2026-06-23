@@ -5,6 +5,7 @@ import nibble.{type Parser, do, or, return}
 import yum/yaml/lexer/context.{type Context}
 import yum/yaml/node.{type YamlNode}
 import yum/yaml/parser/double_quoted
+import yum/yaml/parser/node_property
 import yum/yaml/parser/scalar
 import yum/yaml/parser/single_quoted
 import yum/yaml/parser/span
@@ -200,6 +201,10 @@ fn mapping_value_parser() -> Parser(YamlNode, Token, Context) {
 }
 
 fn flow_node_parser() -> Parser(YamlNode, Token, Context) {
+  node_property.parser(bare_flow_node_parser())
+}
+
+fn bare_flow_node_parser() -> Parser(YamlNode, Token, Context) {
   nibble.one_of([
     nibble.lazy(sequence_parser),
     nibble.lazy(mapping_parser),

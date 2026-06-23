@@ -1,6 +1,6 @@
 //// Diagnostics for parsed YAML nodes.
 
-import gleam/dict
+import gleam/dict.{type Dict}
 import gleam/float
 import gleam/int
 import gleam/list
@@ -23,6 +23,10 @@ pub type Diagnostic {
   /// `duplicate` is the repeated key's span. `original` is the first matching
   /// key's span.
   DuplicateMappingKey(key: String, duplicate: Span, original: Span)
+
+  /// An alias references an anchor that has not been seen earlier in the
+  /// document.
+  UnknownAlias(alias: String, span: Span)
 }
 
 type SeenKey {
@@ -32,26 +36,83 @@ type SeenKey {
 /// Collects non-fatal diagnostics for a parsed YAML node tree.
 ///
 pub fn collect(value: YamlNode) -> List(Diagnostic) {
-  case node.kind(value) {
-    node.Mapping(entries) ->
-      list.append(
-        duplicate_key_diagnostics(entries),
-        nested_diagnostics(entries),
-      )
-
-    node.Sequence(entries) -> list.flat_map(entries, collect)
-
-    _ -> []
-  }
+  let #(_, diagnostics) = collect_with_anchors(value, dict.new())
+  diagnostics
 }
 
-fn nested_diagnostics(
+fn collect_with_anchors(
+  value: YamlNode,
+  anchors: Dict(String, YamlNode),
+) -> #(Dict(String, YamlNode), List(Diagnostic)) {
+  let #(anchors, property_diagnostics) = collect_node_properties(value, anchors)
+
+  let #(anchors, nested_diagnostics) = case node.kind(value) {
+    node.Mapping(entries) -> collect_mapping_entries(entries, anchors)
+
+    node.Sequence(entries) -> collect_sequence_entries(entries, anchors)
+
+    _ -> #(anchors, [])
+  }
+
+  #(anchors, list.append(property_diagnostics, nested_diagnostics))
+}
+
+fn collect_node_properties(
+  value: YamlNode,
+  anchors: Dict(String, YamlNode),
+) -> #(Dict(String, YamlNode), List(Diagnostic)) {
+  let diagnostics = case node.alias(value) {
+    Some(alias) ->
+      case dict.has_key(anchors, alias) {
+        True -> []
+        False -> [UnknownAlias(alias:, span: node.span(value))]
+      }
+    None -> []
+  }
+
+  let anchors = case node.anchor(value) {
+    Some(anchor) -> dict.insert(anchors, anchor, value)
+    None -> anchors
+  }
+
+  #(anchors, diagnostics)
+}
+
+fn collect_mapping_entries(
   entries: List(#(YamlNode, YamlNode)),
-) -> List(Diagnostic) {
-  entries
-  |> list.flat_map(fn(entry) {
-    let #(key, value) = entry
-    list.append(collect(key), collect(value))
+  anchors: Dict(String, YamlNode),
+) -> #(Dict(String, YamlNode), List(Diagnostic)) {
+  let #(anchors, nested_diagnostics) =
+    list.fold(entries, #(anchors, []), fn(acc, entry) {
+      let #(anchors, diagnostics) = acc
+      let #(key, value) = entry
+      let #(anchors, key_diagnostics) = collect_with_anchors(key, anchors)
+      let #(anchors, value_diagnostics) = collect_with_anchors(value, anchors)
+
+      #(
+        anchors,
+        list.append(
+          diagnostics,
+          list.append(key_diagnostics, value_diagnostics),
+        ),
+      )
+    })
+
+  #(
+    anchors,
+    list.append(duplicate_key_diagnostics(entries), nested_diagnostics),
+  )
+}
+
+fn collect_sequence_entries(
+  entries: List(YamlNode),
+  anchors: Dict(String, YamlNode),
+) -> #(Dict(String, YamlNode), List(Diagnostic)) {
+  list.fold(entries, #(anchors, []), fn(acc, entry) {
+    let #(anchors, diagnostics) = acc
+    let #(anchors, entry_diagnostics) = collect_with_anchors(entry, anchors)
+
+    #(anchors, list.append(diagnostics, entry_diagnostics))
   })
 }
 
@@ -99,7 +160,35 @@ fn duplicate_key_diagnostic(duplicate: YamlNode, first: SeenKey) -> Diagnostic {
 pub fn severity(diagnostic: Diagnostic) -> Severity {
   case diagnostic {
     DuplicateMappingKey(..) -> Warning
+    UnknownAlias(..) -> DiagnosticError
   }
+}
+
+/// Returns True when a diagnostic is fatal.
+///
+pub fn is_error(diagnostic: Diagnostic) -> Bool {
+  severity(diagnostic) == DiagnosticError
+}
+
+/// Returns True when any diagnostic is fatal.
+///
+pub fn has_errors(diagnostics: List(Diagnostic)) -> Bool {
+  diagnostics
+  |> list.any(satisfying: is_error)
+}
+
+/// Keeps only fatal diagnostics.
+///
+pub fn errors(diagnostics: List(Diagnostic)) -> List(Diagnostic) {
+  diagnostics
+  |> list.filter(keeping: is_error)
+}
+
+/// Keeps only warning diagnostics.
+///
+pub fn warnings(diagnostics: List(Diagnostic)) -> List(Diagnostic) {
+  diagnostics
+  |> list.filter(keeping: fn(diagnostic) { !is_error(diagnostic) })
 }
 
 /// Renders a human-readable diagnostic message.
@@ -107,6 +196,7 @@ pub fn severity(diagnostic: Diagnostic) -> Severity {
 pub fn message(diagnostic: Diagnostic) -> String {
   case diagnostic {
     DuplicateMappingKey(key:, ..) -> "Duplicate mapping key `" <> key <> "`"
+    UnknownAlias(alias:, ..) -> "Unknown alias `" <> alias <> "`"
   }
 }
 
@@ -115,6 +205,7 @@ pub fn message(diagnostic: Diagnostic) -> String {
 pub fn span(diagnostic: Diagnostic) -> Span {
   case diagnostic {
     DuplicateMappingKey(duplicate:, ..) -> duplicate
+    UnknownAlias(span:, ..) -> span
   }
 }
 
@@ -123,6 +214,7 @@ pub fn span(diagnostic: Diagnostic) -> Span {
 pub fn related(diagnostic: Diagnostic) -> List(Related) {
   case diagnostic {
     DuplicateMappingKey(original:, ..) -> [FirstMappingKey(span: original)]
+    UnknownAlias(..) -> []
   }
 }
 

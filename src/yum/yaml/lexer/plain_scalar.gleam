@@ -3,6 +3,7 @@ import gleam/string
 import nibble/lexer.{type Matcher}
 import yum/yaml/lexer/block_scalar
 import yum/yaml/lexer/context.{type Context}
+import yum/yaml/lexer/node_property
 import yum/yaml/token.{type Token}
 
 pub fn lexer() -> Matcher(Token, Context) {
@@ -22,14 +23,23 @@ pub fn lexer() -> Matcher(Token, Context) {
       token.Colon |> lexer.Keep(ctx)
 
     _, "\n" | _, "" ->
-      case block_scalar.header(lexeme, current_indent(prev)) {
-        Some(header) ->
-          header
-          |> lexer.Keep(context.BlockScalar(
-            prev:,
-            parent_indent: current_indent(prev),
-          ))
-        None -> keep_plain_or_mapping_key(lexeme, ctx, prev)
+      case node_property.token(lexeme) {
+        Some(property) ->
+          case property {
+            token.Anchor(..) -> property |> lexer.Keep(ctx)
+            token.Alias(..) -> property |> lexer.Keep(prev)
+            _ -> property |> lexer.Keep(ctx)
+          }
+        None ->
+          case block_scalar.header(lexeme, current_indent(prev)) {
+            Some(header) ->
+              header
+              |> lexer.Keep(context.BlockScalar(
+                prev:,
+                parent_indent: current_indent(prev),
+              ))
+            None -> keep_plain_or_mapping_key(lexeme, ctx, prev)
+          }
       }
 
     _, "#" ->
@@ -38,9 +48,18 @@ pub fn lexer() -> Matcher(Token, Context) {
         False -> lexer.Skip
       }
     _, " " | _, "\t" | _, "\r" ->
-      case string.ends_with(lexeme, ":") {
-        True -> mapping_key(lexeme) |> lexer.Keep(ctx)
-        False -> lexer.Skip
+      case node_property.token(lexeme) {
+        Some(property) ->
+          case property {
+            token.Anchor(..) -> property |> lexer.Keep(ctx)
+            token.Alias(..) -> property |> lexer.Keep(prev)
+            _ -> property |> lexer.Keep(ctx)
+          }
+        None ->
+          case string.ends_with(lexeme, ":") {
+            True -> mapping_key(lexeme) |> lexer.Keep(ctx)
+            False -> lexer.Skip
+          }
       }
     _, _ -> lexer.Skip
   }

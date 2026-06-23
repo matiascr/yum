@@ -8,6 +8,7 @@ import yum/yaml/parser/block_sequence
 import yum/yaml/parser/double_quoted
 import yum/yaml/parser/flow_collection
 import yum/yaml/parser/indentation
+import yum/yaml/parser/node_property
 import yum/yaml/parser/scalar
 import yum/yaml/parser/single_quoted
 import yum/yaml/token.{type Token}
@@ -54,6 +55,10 @@ fn indentless_sequence_parser(
 }
 
 fn block_node_parser(indent: Int) -> Parser(YamlNode, Token, Context) {
+  node_property.parser(bare_block_node_parser(indent))
+}
+
+fn bare_block_node_parser(indent: Int) -> Parser(YamlNode, Token, Context) {
   nibble.one_of([
     flow_collection.parser(),
     block_scalar.parser(),
@@ -66,6 +71,10 @@ fn block_node_parser(indent: Int) -> Parser(YamlNode, Token, Context) {
 }
 
 fn mapping_value_parser(indent: Int) -> Parser(YamlNode, Token, Context) {
+  node_property.parser(bare_mapping_value_parser(indent))
+}
+
+fn bare_mapping_value_parser(indent: Int) -> Parser(YamlNode, Token, Context) {
   nibble.one_of([
     flow_collection.parser(),
     block_scalar.parser(),

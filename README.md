@@ -56,11 +56,12 @@ pub fn build_document() {
 }
 ```
 
-For tooling, parse with diagnostics to keep non-fatal warnings such as duplicate
-mapping keys:
+For tooling, parse syntax first and then resolve the YAML document. The resolver
+keeps non-fatal warnings such as duplicate mapping keys as typed diagnostics:
 
 ```gleam
 import yum/yaml
+import yum/yaml/resolved
 
 const input = "
 name: yum
@@ -68,8 +69,15 @@ name: yaml
 "
 
 pub fn check() {
-  yaml.parse_node_with_diagnostics(input)
-  // -> Ok(Parsed(value: YamlNode(...), diagnostics: [DuplicateMappingKey(...)]))
+  yaml.load_node(input)
+  // -> Ok(Resolved(...))
+}
+
+pub fn diagnostics() {
+  let assert Ok(document) = yaml.load_node(input)
+
+  resolved.diagnostics(document)
+  // -> [DuplicateMappingKey(...)]
 }
 ```
 

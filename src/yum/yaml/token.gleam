@@ -81,6 +81,8 @@ pub type Token {
   SingleQuotedScalar(value: String)
   MappingKey(value: String)
   PlainScalar(value: String)
+  Anchor(value: String)
+  Alias(value: String)
   BlockScalarHeader(style: BlockScalarStyle, chomp: Chomp, parent_indent: Int)
   BlockScalarLine(indent: Int, content: String)
   Escape(value: String)

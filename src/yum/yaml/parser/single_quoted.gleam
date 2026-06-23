@@ -42,6 +42,8 @@ pub fn parser() -> Parser(YamlNode, Token, Context) {
         | token.DoubleQuotedScalar(_)
         | token.MappingKey(_)
         | token.PlainScalar(_)
+        | token.Anchor(_)
+        | token.Alias(_)
         | token.BlockScalarHeader(_, _, _)
         | token.BlockScalarLine(_, _)
         | token.Escape(_)

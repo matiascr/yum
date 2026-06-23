@@ -1,7 +1,9 @@
 import gleam/list
+import gleam/option.{Some}
 import gleam/string
 import nibble/lexer
 import yum/yaml/lexer/context.{type Context}
+import yum/yaml/lexer/node_property
 import yum/yaml/token
 
 pub fn ends_with_whitespace(s: String) -> Bool {
@@ -12,6 +14,13 @@ pub fn ends_with_whitespace(s: String) -> Bool {
 }
 
 pub fn keep_plain_scalar(lexeme: String, ctx: Context) {
+  case node_property.token(lexeme) {
+    Some(token) -> token |> lexer.Keep(ctx)
+    _ -> keep_scalar(lexeme, ctx)
+  }
+}
+
+fn keep_scalar(lexeme: String, ctx: Context) {
   let scalar =
     lexeme
     |> string.split("\n")

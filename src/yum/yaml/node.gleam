@@ -111,6 +111,24 @@ pub fn alias(node: YamlNode) -> Option(String) {
   node.alias
 }
 
+/// Returns a copy of the node with tag metadata.
+///
+pub fn with_tag(node: YamlNode, tag: String) -> YamlNode {
+  YamlNode(..node, tag: Some(tag))
+}
+
+/// Returns a copy of the node with anchor metadata.
+///
+pub fn with_anchor(node: YamlNode, anchor: String) -> YamlNode {
+  YamlNode(..node, anchor: Some(anchor))
+}
+
+/// Returns a copy of the node with alias metadata.
+///
+pub fn with_alias(node: YamlNode, alias: String) -> YamlNode {
+  YamlNode(..node, alias: Some(alias))
+}
+
 pub fn as_mapping(node: YamlNode) -> Option(List(#(YamlNode, YamlNode))) {
   case node.kind {
     Mapping(entries) -> Some(entries)
@@ -231,6 +249,6 @@ pub fn from_ast(value: YamlAST) -> YamlNode {
         #(from_ast(key), from_ast(value))
       })
       |> Mapping
-      |> synthetic
+      |> synthetic()
   }
 }

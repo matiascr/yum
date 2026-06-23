@@ -8,10 +8,14 @@
 //// yaml.parse("name: yum")
 //// ```
 ////
-//// Use [`parse`](#parse) when you want a single YAML document value, including
-//// document-level metadata such as directives. Use [`parse_stream`](#parse_stream) for
-//// YAML streams containing zero or more explicit documents. Use [`parse_node`](#parse_node)
-//// and [`parse_node_stream`](#parse_node_stream) when you want an opaque node API.
+//// Use [`parse`](#parse) when you want a single YAML document value. Use
+//// [`parse_stream`](#parse_stream) for YAML streams containing zero or more
+//// explicit documents. Use [`parse_node`](#parse_node) and
+//// [`parse_node_stream`](#parse_node_stream) when you want an opaque node API.
+////
+//// For tooling-grade loading, parse syntax first and then call
+//// [`resolve`](#resolve), or use [`load_node`](#load_node) as the convenience
+//// form.
 ////
 
 import gleam/bool
@@ -29,10 +33,17 @@ import yum/yaml/error.{type YamlError}
 import yum/yaml/lexer
 import yum/yaml/node.{type YamlNode}
 import yum/yaml/parser
+import yum/yaml/resolved.{type Resolved} as resolved_document
 
 pub type DecodeError {
   ParseError(YamlError)
+  ResolveError(List(Diagnostic))
   UnableToDecode(List(dynamic_decode.DecodeError))
+}
+
+pub type LoadError {
+  LoadParseError(YamlError)
+  LoadResolveError(List(Diagnostic))
 }
 
 /// A parsed value with non-fatal diagnostics collected from it.
@@ -98,7 +109,12 @@ pub fn parse_node_with_diagnostics(
 ) -> Result(Parsed(YamlNode), YamlError) {
   use document <- result.try(parse_node(input))
 
-  Parsed(value: document, diagnostics: diagnostic.collect(document))
+  let diagnostics = case resolve(document) {
+    Ok(document) -> resolved_document.diagnostics(document)
+    Error(diagnostics) -> diagnostics
+  }
+
+  Parsed(value: document, diagnostics:)
   |> Ok
 }
 
@@ -113,6 +129,33 @@ pub fn parse_node_stream(input: String) -> Result(List(YamlNode), YamlError) {
   Ok(parsed)
 }
 
+/// Parses and resolves a YAML document.
+///
+/// This is the convenience form of `parse_node` followed by `resolve`.
+///
+pub fn load_node(input: String) -> Result(Resolved, LoadError) {
+  use document <- result.try(
+    parse_node(input) |> result.map_error(LoadParseError),
+  )
+
+  document
+  |> resolve()
+  |> result.map_error(LoadResolveError)
+}
+
+/// Parses and resolves a YAML stream.
+///
+pub fn load_node_stream(input: String) -> Result(List(Resolved), LoadError) {
+  use documents <- result.try(
+    parse_node_stream(input) |> result.map_error(LoadParseError),
+  )
+
+  documents
+  |> list.map(resolve)
+  |> result.all()
+  |> result.map_error(LoadResolveError)
+}
+
 /// Parses a YAML stream into opaque nodes and non-fatal diagnostics.
 ///
 pub fn parse_node_stream_with_diagnostics(
@@ -122,9 +165,25 @@ pub fn parse_node_stream_with_diagnostics(
 
   Parsed(
     value: documents,
-    diagnostics: list.flat_map(documents, diagnostic.collect),
+    diagnostics: list.flat_map(documents, resolve_diagnostics),
   )
   |> Ok
+}
+
+/// Resolves a parsed YAML node into a composed YAML document.
+///
+/// The syntax parser preserves source structure. This function is the semantic
+/// YAML phase: it collects typed diagnostics such as duplicate keys today, and
+/// is where anchors, aliases, directives, and tags are validated as support is
+/// added.
+///
+pub fn resolve(node: YamlNode) -> Result(Resolved, List(Diagnostic)) {
+  let diagnostics = diagnostic.collect(node)
+
+  case diagnostic.has_errors(diagnostics) {
+    True -> Error(diagnostics)
+    False -> Ok(resolved_document.new(root: node, diagnostics: diagnostics))
+  }
 }
 
 /// Converts a span-aware YAML node to Gleam dynamic data for use with decoders.
@@ -145,10 +204,19 @@ pub fn decode(
   from input: String,
   using decoder: dynamic_decode.Decoder(t),
 ) -> Result(t, DecodeError) {
-  use node <- result.try(parse_node(input) |> result.map_error(ParseError))
+  use document <- result.try(
+    load_node(input)
+    |> result.map_error(fn(error) {
+      case error {
+        LoadParseError(error) -> ParseError(error)
+        LoadResolveError(diagnostics) -> ResolveError(diagnostics)
+      }
+    }),
+  )
 
-  node
-  |> to_dynamic
+  document
+  |> resolved_document.root()
+  |> to_dynamic()
   |> dynamic_decode.run(decoder)
   |> result.map_error(UnableToDecode)
 }
@@ -202,5 +270,12 @@ fn count_indents(input: String) -> Int {
   case input {
     " " <> rest -> 1 + count_indents(rest)
     _ -> 0
+  }
+}
+
+fn resolve_diagnostics(node: YamlNode) -> List(Diagnostic) {
+  case resolve(node) {
+    Ok(document) -> resolved_document.diagnostics(document)
+    Error(diagnostics) -> diagnostics
   }
 }

@@ -10,6 +10,7 @@ import yum/yaml/parser/block_scalar
 import yum/yaml/parser/double_quoted
 import yum/yaml/parser/flow_collection
 import yum/yaml/parser/indentation
+import yum/yaml/parser/node_property
 import yum/yaml/parser/scalar
 import yum/yaml/parser/single_quoted
 import yum/yaml/parser/span
@@ -125,6 +126,10 @@ fn indentation_parser() -> Parser(Nil, Token, Context) {
 }
 
 fn default_parser() -> Parser(YamlNode, Token, Context) {
+  node_property.parser(bare_node_parser())
+}
+
+fn bare_node_parser() -> Parser(YamlNode, Token, Context) {
   nibble.one_of([
     block_collection.parser(),
     block_scalar.parser(),
