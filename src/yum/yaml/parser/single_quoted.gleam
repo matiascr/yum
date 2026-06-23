@@ -47,6 +47,7 @@ pub fn parser() -> Parser(YamlNode, Token, Context) {
         | token.Tag(_)
         | token.BlockScalarHeader(_, _, _)
         | token.BlockScalarLine(_, _)
+        | token.Directive(_, _)
         | token.Escape(_)
         | token.InvalidEscape -> None
       }

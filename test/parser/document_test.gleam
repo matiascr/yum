@@ -2,7 +2,10 @@ import birdie
 import gleam/result
 import gleam/string
 import yum/yaml
+import yum/yaml/ast
+import yum/yaml/document
 import yum/yaml/error
+import yum/yaml/node
 
 const test_file_prefix = "parser:document:"
 
@@ -61,6 +64,49 @@ pub fn markers_around_block_collections_test() {
   input
   |> yaml.parse_ast_stream()
   |> snap(input, "markers_around_block_collections_test")
+}
+
+pub fn parse_document_preserves_yaml_directive_test() {
+  let assert Ok(parsed) = yaml.parse_document("%YAML 1.2\n---\nhello\n")
+
+  assert document.directives(parsed)
+    == [
+      document.Directive(
+        name: "YAML",
+        parameters: ["1.2"],
+        span: node.Span(start: node.Position(1, 1), end: node.Position(1, 10)),
+      ),
+    ]
+}
+
+pub fn parse_document_preserves_tag_directive_test() {
+  let assert Ok(parsed) =
+    yaml.parse_document("%TAG !e! tag:example.com,2026:\n---\n!e!thing value\n")
+
+  assert document.directives(parsed)
+    == [
+      document.Directive(
+        name: "TAG",
+        parameters: ["!e!", "tag:example.com,2026:"],
+        span: node.Span(start: node.Position(1, 1), end: node.Position(1, 31)),
+      ),
+    ]
+}
+
+pub fn parse_preserves_directives_on_yaml_document_test() {
+  let assert Ok(parsed) = yaml.parse("%YAML 1.2\n---\nhello\n")
+
+  assert ast.directives(parsed) == [ast.YamlDirective("YAML", ["1.2"])]
+}
+
+pub fn parse_node_still_returns_only_the_root_node_test() {
+  let assert Ok(parsed) = yaml.parse_node("%YAML 1.2\n---\nhello\n")
+
+  assert node.as_string(parsed) == Ok("hello")
+}
+
+pub fn directives_require_explicit_document_start_test() {
+  assert yaml.parse_document("%YAML 1.2\nhello\n") |> result.is_error()
 }
 
 pub fn single_document_api_rejects_multiple_documents_test() {

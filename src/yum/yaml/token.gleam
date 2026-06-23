@@ -86,6 +86,7 @@ pub type Token {
   Tag(value: String)
   BlockScalarHeader(style: BlockScalarStyle, chomp: Chomp, parent_indent: Int)
   BlockScalarLine(indent: Int, content: String)
+  Directive(name: String, parameters: List(String))
   Escape(value: String)
   InvalidEscape
 }

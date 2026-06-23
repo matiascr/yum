@@ -4,6 +4,7 @@ import yum/yaml/error.{type YamlError}
 import yum/yaml/lexer/block_scalar
 import yum/yaml/lexer/comment
 import yum/yaml/lexer/context.{type Context}
+import yum/yaml/lexer/directive
 import yum/yaml/lexer/document_marker
 import yum/yaml/lexer/double_quoted_scalar
 import yum/yaml/lexer/flow_mapping
@@ -26,6 +27,7 @@ fn lexer() -> Lexer(Token, Context) {
     case ctx {
       context.BlockStyle(_) -> [
         comment.lexer(),
+        directive.lexer(),
         document_marker.lexer(),
         indentation.lexer(),
       ]
@@ -33,6 +35,7 @@ fn lexer() -> Lexer(Token, Context) {
       // Flow Style Productions
       context.FlowStyle(prev: _) -> [
         comment.lexer(),
+        directive.lexer(),
         document_marker.lexer(),
         indentation.lexer(),
         plain_scalar.lexer(),

@@ -17,6 +17,9 @@
 //// [`resolve`](#resolve), or use [`load_node`](#load_node) as the convenience
 //// form.
 ////
+//// Use [`parse_document`](#parse_document) when you need document-level
+//// metadata such as directives.
+////
 
 import gleam/bool
 import gleam/dynamic.{type Dynamic}
@@ -27,6 +30,7 @@ import gleam/result
 import gleam/string
 import yum/yaml/ast.{type Yaml, type YamlAST}
 import yum/yaml/diagnostic.{type Diagnostic}
+import yum/yaml/document.{type Document}
 import yum/yaml/dynamic as yaml_dynamic
 import yum/yaml/emitter
 import yum/yaml/error.{type YamlError}
@@ -57,17 +61,44 @@ pub type Parsed(a) {
 /// Follows the [YAML 1.2 specification](https://yaml.org/spec/1.2.2/)
 ///
 pub fn parse(input: String) -> Result(Yaml, YamlError) {
-  input
-  |> parse_ast()
-  |> result.map(ast.to_yaml)
+  use document <- result.try(parse_document(input))
+
+  document
+  |> yaml_from_document
+  |> Ok
 }
 
 /// Parses a YAML stream into a list of YAML documents.
 ///
 pub fn parse_stream(input: String) -> Result(List(Yaml), YamlError) {
   input
-  |> parse_ast_stream()
-  |> result.map(list.map(_, ast.to_yaml))
+  |> parse_document_stream()
+  |> result.map(list.map(_, yaml_from_document))
+}
+
+/// Parses a YAML file into a document with node contents and metadata.
+///
+pub fn parse_document(input: String) -> Result(Document, YamlError) {
+  use documents <- result.try(parse_document_stream(input))
+
+  case documents {
+    [document] -> Ok(document)
+    [_, _, ..] -> Error(error.MultipleDocuments)
+    [] -> Error(error.UnexpectedEndOfInput)
+  }
+}
+
+/// Parses a YAML stream into documents with node contents and metadata.
+///
+pub fn parse_document_stream(
+  input: String,
+) -> Result(List(Document), YamlError) {
+  use input <- result.try(normalize_whitespace(input, 0))
+  use input <- result.try(normalize_indents(input))
+
+  use tokens <- result.try(lexer.lex(input))
+  use parsed <- result.try(parser.parse_document_stream(tokens))
+  Ok(parsed)
 }
 
 /// Parses a YAML file into the AST node for its document contents.
@@ -121,12 +152,9 @@ pub fn parse_node_with_diagnostics(
 /// Parses a YAML stream into opaque tooling nodes.
 ///
 pub fn parse_node_stream(input: String) -> Result(List(YamlNode), YamlError) {
-  use input <- result.try(normalize_whitespace(input, 0))
-  use input <- result.try(normalize_indents(input))
-
-  use tokens <- result.try(lexer.lex(input))
-  use parsed <- result.try(parser.parse_stream(tokens))
-  Ok(parsed)
+  input
+  |> parse_document_stream()
+  |> result.map(list.map(_, document.root))
 }
 
 /// Parses and resolves a YAML document.
@@ -278,4 +306,17 @@ fn resolve_diagnostics(node: YamlNode) -> List(Diagnostic) {
     Ok(document) -> resolved_document.diagnostics(document)
     Error(diagnostics) -> diagnostics
   }
+}
+
+fn yaml_from_document(document: Document) -> Yaml {
+  ast.new(
+    ast: document.root(document) |> node.to_ast,
+    directives: document.directives(document) |> list.map(ast_directive),
+  )
+}
+
+fn ast_directive(directive: document.Directive) -> ast.YamlDirective {
+  let document.Directive(name:, parameters:, ..) = directive
+
+  ast.YamlDirective(name:, parameters:)
 }

@@ -33,7 +33,16 @@ pub type YamlAST {
 /// Creates a YAML document from a single AST node and no directives.
 ///
 pub fn to_yaml(ast: YamlAST) -> Yaml {
-  Yaml(ast: ast, directives: [])
+  new(ast: ast, directives: [])
+}
+
+/// Creates a YAML document from a single AST node and directives.
+///
+pub fn new(
+  ast ast: YamlAST,
+  directives directives: List(YamlDirective),
+) -> Yaml {
+  Yaml(ast: ast, directives: directives)
 }
 
 /// Returns the root AST node for a YAML document.
