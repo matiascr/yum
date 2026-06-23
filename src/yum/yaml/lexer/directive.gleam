@@ -10,7 +10,13 @@ pub fn lexer() -> Matcher(Token, Context) {
   use ctx, lexeme, lookahead <- lexer.custom()
 
   use <- bool.guard(current_indent(ctx) != 0, lexer.NoMatch)
-  use <- bool.guard(!string.starts_with(lexeme, "%"), lexer.NoMatch)
+  use <- bool.guard(
+    case lexeme {
+      "%" <> _ -> False
+      _ -> True
+    },
+    lexer.NoMatch,
+  )
 
   case lookahead {
     "\n" | "" ->

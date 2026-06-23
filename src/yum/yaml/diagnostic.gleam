@@ -27,6 +27,12 @@ pub type Diagnostic {
   /// An alias references an anchor that has not been seen earlier in the
   /// document.
   UnknownAlias(alias: String, span: Span)
+
+  /// A `%TAG` directive is malformed.
+  InvalidTagDirective(span: Span)
+
+  /// A node tag uses a handle that has not been declared for the document.
+  UnknownTagHandle(handle: String, span: Span)
 }
 
 type SeenKey {
@@ -161,6 +167,8 @@ pub fn severity(diagnostic: Diagnostic) -> Severity {
   case diagnostic {
     DuplicateMappingKey(..) -> Warning
     UnknownAlias(..) -> DiagnosticError
+    InvalidTagDirective(..) -> DiagnosticError
+    UnknownTagHandle(..) -> DiagnosticError
   }
 }
 
@@ -197,6 +205,8 @@ pub fn message(diagnostic: Diagnostic) -> String {
   case diagnostic {
     DuplicateMappingKey(key:, ..) -> "Duplicate mapping key `" <> key <> "`"
     UnknownAlias(alias:, ..) -> "Unknown alias `" <> alias <> "`"
+    InvalidTagDirective(..) -> "Invalid %TAG directive"
+    UnknownTagHandle(handle:, ..) -> "Unknown tag handle `" <> handle <> "`"
   }
 }
 
@@ -206,6 +216,8 @@ pub fn span(diagnostic: Diagnostic) -> Span {
   case diagnostic {
     DuplicateMappingKey(duplicate:, ..) -> duplicate
     UnknownAlias(span:, ..) -> span
+    InvalidTagDirective(span:) -> span
+    UnknownTagHandle(span:, ..) -> span
   }
 }
 
@@ -215,6 +227,8 @@ pub fn related(diagnostic: Diagnostic) -> List(Related) {
   case diagnostic {
     DuplicateMappingKey(original:, ..) -> [FirstMappingKey(span: original)]
     UnknownAlias(..) -> []
+    InvalidTagDirective(..) -> []
+    UnknownTagHandle(..) -> []
   }
 }
 

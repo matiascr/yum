@@ -4,6 +4,7 @@ import gleam/result
 import yum/yaml
 import yum/yaml/builder
 import yum/yaml/diagnostic
+import yum/yaml/document
 import yum/yaml/node
 import yum/yaml/resolved
 
@@ -40,6 +41,109 @@ pub fn load_node_stream_resolves_each_document_test() {
 
   assert list.length(documents) == 2
   assert list.map(documents, resolved.diagnostics) == [[], []]
+}
+
+pub fn resolve_document_expands_declared_tag_handles_test() {
+  let assert Ok(document) =
+    yaml.parse_document(
+      "%TAG !e! tag:example.com,2026:\n---\nvalue: !e!thing hello\n",
+    )
+  let assert Ok(resolved_document) = yaml.resolve_document(document)
+  let assert option.Some(value) =
+    resolved_document
+    |> resolved.root()
+    |> node.get([node.Key("value")])
+
+  assert node.tag(value) == option.Some("tag:example.com,2026:thing")
+}
+
+pub fn resolve_document_expands_core_tag_handles_test() {
+  let assert Ok(document) = yaml.parse_document("value: !!str 123\n")
+  let assert Ok(resolved_document) = yaml.resolve_document(document)
+  let assert option.Some(value) =
+    resolved_document
+    |> resolved.root()
+    |> node.get([node.Key("value")])
+
+  assert node.tag(value) == option.Some("tag:yaml.org,2002:str")
+  assert node.as_int(value) == Ok(123)
+}
+
+pub fn resolve_document_expands_primary_tag_handles_test() {
+  let assert Ok(document) =
+    yaml.parse_document(
+      "%TAG ! tag:example.com,2026:\n---\nvalue: !Thing hello\n",
+    )
+  let assert Ok(resolved_document) = yaml.resolve_document(document)
+  let assert option.Some(value) =
+    resolved_document
+    |> resolved.root()
+    |> node.get([node.Key("value")])
+
+  assert node.tag(value) == option.Some("tag:example.com,2026:Thing")
+}
+
+pub fn resolve_document_preserves_default_local_tags_test() {
+  let assert Ok(document) = yaml.parse_document("value: !Thing hello\n")
+  let assert Ok(resolved_document) = yaml.resolve_document(document)
+  let assert option.Some(value) =
+    resolved_document
+    |> resolved.root()
+    |> node.get([node.Key("value")])
+
+  assert node.tag(value) == option.Some("!Thing")
+}
+
+pub fn resolve_document_expands_verbatim_tags_test() {
+  let assert Ok(document) =
+    yaml.parse_document("value: !<tag:example.com,2026:thing> hello\n")
+  let assert Ok(resolved_document) = yaml.resolve_document(document)
+  let assert option.Some(value) =
+    resolved_document
+    |> resolved.root()
+    |> node.get([node.Key("value")])
+
+  assert node.tag(value) == option.Some("tag:example.com,2026:thing")
+}
+
+pub fn resolve_document_rejects_unknown_tag_handles_test() {
+  let assert Ok(document) = yaml.parse_document("value: !e!thing hello\n")
+  let assert option.Some(value) =
+    document
+    |> document.root()
+    |> node.get([node.Key("value")])
+
+  let assert Error([error]) = yaml.resolve_document(document)
+
+  assert error
+    == diagnostic.UnknownTagHandle(handle: "!e!", span: node.span(value))
+  assert diagnostic.severity(error) == diagnostic.DiagnosticError
+  assert diagnostic.message(error) == "Unknown tag handle `!e!`"
+}
+
+pub fn resolve_document_rejects_invalid_tag_directives_test() {
+  let assert Ok(document) = yaml.parse_document("%TAG !e!\n---\nvalue\n")
+  let assert [directive] = document.directives(document)
+  let document.Directive(span:, ..) = directive
+
+  let assert Error([error]) = yaml.resolve_document(document)
+
+  assert error == diagnostic.InvalidTagDirective(span:)
+  assert diagnostic.severity(error) == diagnostic.DiagnosticError
+  assert diagnostic.message(error) == "Invalid %TAG directive"
+}
+
+pub fn load_node_expands_declared_tag_handles_test() {
+  let assert Ok(resolved_document) =
+    yaml.load_node(
+      "%TAG !e! tag:example.com,2026:\n---\nvalue: !e!thing hello\n",
+    )
+  let assert option.Some(value) =
+    resolved_document
+    |> resolved.root()
+    |> node.get([node.Key("value")])
+
+  assert node.tag(value) == option.Some("tag:example.com,2026:thing")
 }
 
 pub fn diagnostic_helpers_split_warnings_and_errors_test() {

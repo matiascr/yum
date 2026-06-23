@@ -14,18 +14,20 @@
 //// [`parse_node_stream`](#parse_node_stream) when you want an opaque node API.
 ////
 //// For tooling-grade loading, parse syntax first and then call
-//// [`resolve`](#resolve), or use [`load_node`](#load_node) as the convenience
-//// form.
+//// [`resolve`](#resolve) or [`resolve_document`](#resolve_document), or use
+//// [`load_node`](#load_node) as the convenience form.
 ////
 //// Use [`parse_document`](#parse_document) when you need document-level
 //// metadata such as directives.
 ////
 
 import gleam/bool
+import gleam/dict.{type Dict}
 import gleam/dynamic.{type Dynamic}
 import gleam/dynamic/decode as dynamic_decode
 import gleam/int
 import gleam/list
+import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
 import yum/yaml/ast.{type Yaml, type YamlAST}
@@ -138,14 +140,15 @@ pub fn parse_node(input: String) -> Result(YamlNode, YamlError) {
 pub fn parse_node_with_diagnostics(
   input: String,
 ) -> Result(Parsed(YamlNode), YamlError) {
-  use document <- result.try(parse_node(input))
+  use document <- result.try(parse_document(input))
+  let root = document.root(document)
 
-  let diagnostics = case resolve(document) {
+  let diagnostics = case resolve_document(document) {
     Ok(document) -> resolved_document.diagnostics(document)
     Error(diagnostics) -> diagnostics
   }
 
-  Parsed(value: document, diagnostics:)
+  Parsed(value: root, diagnostics:)
   |> Ok
 }
 
@@ -159,15 +162,17 @@ pub fn parse_node_stream(input: String) -> Result(List(YamlNode), YamlError) {
 
 /// Parses and resolves a YAML document.
 ///
-/// This is the convenience form of `parse_node` followed by `resolve`.
+/// This is the convenience form of `parse_document` followed by
+/// `resolve_document`, so document-level directives are available during
+/// resolution.
 ///
 pub fn load_node(input: String) -> Result(Resolved, LoadError) {
   use document <- result.try(
-    parse_node(input) |> result.map_error(LoadParseError),
+    parse_document(input) |> result.map_error(LoadParseError),
   )
 
   document
-  |> resolve()
+  |> resolve_document()
   |> result.map_error(LoadResolveError)
 }
 
@@ -175,11 +180,11 @@ pub fn load_node(input: String) -> Result(Resolved, LoadError) {
 ///
 pub fn load_node_stream(input: String) -> Result(List(Resolved), LoadError) {
   use documents <- result.try(
-    parse_node_stream(input) |> result.map_error(LoadParseError),
+    parse_document_stream(input) |> result.map_error(LoadParseError),
   )
 
   documents
-  |> list.map(resolve)
+  |> list.map(resolve_document)
   |> result.all()
   |> result.map_error(LoadResolveError)
 }
@@ -189,11 +194,12 @@ pub fn load_node_stream(input: String) -> Result(List(Resolved), LoadError) {
 pub fn parse_node_stream_with_diagnostics(
   input: String,
 ) -> Result(Parsed(List(YamlNode)), YamlError) {
-  use documents <- result.try(parse_node_stream(input))
+  use documents <- result.try(parse_document_stream(input))
+  let roots = list.map(documents, document.root)
 
   Parsed(
-    value: documents,
-    diagnostics: list.flat_map(documents, resolve_diagnostics),
+    value: roots,
+    diagnostics: list.flat_map(documents, resolve_document_diagnostics),
   )
   |> Ok
 }
@@ -201,16 +207,43 @@ pub fn parse_node_stream_with_diagnostics(
 /// Resolves a parsed YAML node into a composed YAML document.
 ///
 /// The syntax parser preserves source structure. This function is the semantic
-/// YAML phase: it collects typed diagnostics such as duplicate keys today, and
-/// is where anchors, aliases, directives, and tags are validated as support is
-/// added.
+/// YAML phase for node-only callers. It collects typed diagnostics such as
+/// duplicate keys and unknown aliases, and validates tags using the default tag
+/// handles.
 ///
 pub fn resolve(node: YamlNode) -> Result(Resolved, List(Diagnostic)) {
-  let diagnostics = diagnostic.collect(node)
+  document.new(root: node, directives: [])
+  |> resolve_document()
+}
+
+/// Resolves a parsed YAML document into a composed YAML document.
+///
+/// This is the document-aware semantic phase. It validates directives,
+/// expands tag handles, and collects typed diagnostics such as duplicate keys
+/// and unknown aliases.
+///
+pub fn resolve_document(
+  document: Document,
+) -> Result(Resolved, List(Diagnostic)) {
+  let #(tag_handles, directive_diagnostics) =
+    document
+    |> document.directives()
+    |> tag_handles()
+
+  let #(root, tag_diagnostics) =
+    document
+    |> document.root()
+    |> resolve_node_tags(tag_handles)
+
+  let diagnostics =
+    []
+    |> list.append(directive_diagnostics)
+    |> list.append(tag_diagnostics)
+    |> list.append(diagnostic.collect(root))
 
   case diagnostic.has_errors(diagnostics) {
     True -> Error(diagnostics)
-    False -> Ok(resolved_document.new(root: node, diagnostics: diagnostics))
+    False -> Ok(resolved_document.new(root: root, diagnostics: diagnostics))
   }
 }
 
@@ -301,10 +334,195 @@ fn count_indents(input: String) -> Int {
   }
 }
 
-fn resolve_diagnostics(node: YamlNode) -> List(Diagnostic) {
-  case resolve(node) {
+fn resolve_document_diagnostics(document: Document) -> List(Diagnostic) {
+  case resolve_document(document) {
     Ok(document) -> resolved_document.diagnostics(document)
     Error(diagnostics) -> diagnostics
+  }
+}
+
+fn tag_handles(
+  directives: List(document.Directive),
+) -> #(Dict(String, String), List(Diagnostic)) {
+  list.fold(directives, #(default_tag_handles(), []), fn(acc, directive) {
+    let #(handles, diagnostics) = acc
+
+    case directive {
+      document.Directive(name: "TAG", parameters: [handle, prefix], span:) ->
+        case valid_tag_handle(handle) {
+          True -> #(dict.insert(handles, handle, prefix), diagnostics)
+          False -> #(
+            handles,
+            list.append(diagnostics, [diagnostic.InvalidTagDirective(span:)]),
+          )
+        }
+
+      document.Directive(name: "TAG", span:, ..) -> #(
+        handles,
+        list.append(diagnostics, [diagnostic.InvalidTagDirective(span:)]),
+      )
+
+      _ -> acc
+    }
+  })
+}
+
+fn default_tag_handles() -> Dict(String, String) {
+  dict.new()
+  |> dict.insert("!", "!")
+  |> dict.insert("!!", "tag:yaml.org,2002:")
+}
+
+fn valid_tag_handle(handle: String) -> Bool {
+  case handle {
+    "!" | "!!" -> True
+    "!" <> rest -> string.ends_with(rest, "!") && string.length(rest) > 1
+    _ -> False
+  }
+}
+
+fn resolve_node_tags(
+  value: YamlNode,
+  handles: Dict(String, String),
+) -> #(YamlNode, List(Diagnostic)) {
+  let #(kind, nested_diagnostics) = case node.kind(value) {
+    node.Sequence(entries) -> {
+      let #(entries, diagnostics) = resolve_sequence_tags(entries, handles)
+      #(node.Sequence(entries), diagnostics)
+    }
+
+    node.Mapping(entries) -> {
+      let #(entries, diagnostics) = resolve_mapping_tags(entries, handles)
+      #(node.Mapping(entries), diagnostics)
+    }
+
+    kind -> #(kind, [])
+  }
+
+  let #(tag, tag_diagnostics) =
+    node.tag(value)
+    |> resolve_tag(handles, node.span(value))
+
+  let resolved =
+    node.new(kind, span: node.span(value), style: node.style(value))
+    |> apply_tag(tag)
+    |> copy_anchor(from: value)
+    |> copy_alias(from: value)
+
+  #(resolved, list.append(tag_diagnostics, nested_diagnostics))
+}
+
+fn resolve_sequence_tags(
+  entries: List(YamlNode),
+  handles: Dict(String, String),
+) -> #(List(YamlNode), List(Diagnostic)) {
+  let #(entries, diagnostics) =
+    list.fold(entries, #([], []), fn(acc, entry) {
+      let #(entries, diagnostics) = acc
+      let #(entry, entry_diagnostics) = resolve_node_tags(entry, handles)
+
+      #([entry, ..entries], list.append(diagnostics, entry_diagnostics))
+    })
+
+  #(list.reverse(entries), diagnostics)
+}
+
+fn resolve_mapping_tags(
+  entries: List(#(YamlNode, YamlNode)),
+  handles: Dict(String, String),
+) -> #(List(#(YamlNode, YamlNode)), List(Diagnostic)) {
+  let #(entries, diagnostics) =
+    list.fold(entries, #([], []), fn(acc, entry) {
+      let #(entries, diagnostics) = acc
+      let #(key, value) = entry
+      let #(key, key_diagnostics) = resolve_node_tags(key, handles)
+      let #(value, value_diagnostics) = resolve_node_tags(value, handles)
+
+      #(
+        [#(key, value), ..entries],
+        diagnostics
+          |> list.append(key_diagnostics)
+          |> list.append(value_diagnostics),
+      )
+    })
+
+  #(list.reverse(entries), diagnostics)
+}
+
+fn resolve_tag(
+  tag: Option(String),
+  handles: Dict(String, String),
+  span: node.Span,
+) -> #(Option(String), List(Diagnostic)) {
+  case tag {
+    None -> #(None, [])
+    Some(tag) ->
+      case expand_tag(tag, handles, span) {
+        Ok(tag) -> #(Some(tag), [])
+        Error(diagnostic) -> #(Some(tag), [diagnostic])
+      }
+  }
+}
+
+fn expand_tag(
+  tag: String,
+  handles: Dict(String, String),
+  span: node.Span,
+) -> Result(String, Diagnostic) {
+  case tag {
+    "<" <> verbatim ->
+      case string.ends_with(verbatim, ">") {
+        True -> Ok(string.drop_end(verbatim, 1))
+        False -> Ok(tag)
+      }
+
+    "!" <> suffix -> expand_tag_handle("!!", suffix, handles, span)
+
+    _ ->
+      case string.split(tag, "!") {
+        [] -> expand_tag_handle("!", tag, handles, span)
+        [suffix] -> expand_tag_handle("!", suffix, handles, span)
+        [handle, ..suffix] ->
+          expand_tag_handle(
+            "!" <> handle <> "!",
+            string.join(suffix, "!"),
+            handles,
+            span,
+          )
+      }
+  }
+}
+
+fn expand_tag_handle(
+  handle: String,
+  suffix: String,
+  handles: Dict(String, String),
+  span: node.Span,
+) -> Result(String, Diagnostic) {
+  case dict.get(handles, handle) {
+    Ok(prefix) -> Ok(prefix <> suffix)
+    Error(_) -> Error(diagnostic.UnknownTagHandle(handle:, span:))
+  }
+}
+
+fn apply_tag(value: YamlNode, tag: Option(String)) -> YamlNode {
+  case tag {
+    Some(tag) -> node.with_tag(value, tag)
+    None -> value
+  }
+}
+
+fn copy_anchor(value: YamlNode, from source: YamlNode) -> YamlNode {
+  case node.anchor(source) {
+    Some(anchor) -> node.with_anchor(value, anchor)
+    None -> value
+  }
+}
+
+fn copy_alias(value: YamlNode, from source: YamlNode) -> YamlNode {
+  case node.alias(source) {
+    Some(alias) -> node.with_alias(value, alias)
+    None -> value
   }
 }
 
