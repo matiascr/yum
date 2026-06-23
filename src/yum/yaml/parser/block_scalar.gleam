@@ -24,6 +24,7 @@ type Line {
 pub fn parser() -> Parser(Node, Token, Context) {
   use header <- do(header_parser())
   use lines <- do(nibble.many(line_parser()))
+  use _ <- do(validate_lines(header, lines))
   let style = case header.style {
     token.Literal -> node.LiteralBlockScalar
     token.Folded -> node.FoldedBlockScalar
@@ -66,6 +67,26 @@ fn line_parser() -> Parser(Line, Token, Context) {
 
   Line(indent:, content:, span: span.from_lexer(token_span))
   |> return
+}
+
+fn validate_lines(
+  header: Header,
+  lines: List(Line),
+) -> Parser(Nil, Token, Context) {
+  case invalid_content_line(lines, header.parent_indent) {
+    True -> nibble.fail("Expected block scalar content to be indented")
+    False -> return(Nil)
+  }
+}
+
+fn invalid_content_line(lines: List(Line), parent_indent: Int) -> Bool {
+  lines
+  |> list.any(fn(line) {
+    case line {
+      Line(content: "", ..) -> False
+      Line(indent:, ..) -> indent <= parent_indent
+    }
+  })
 }
 
 fn block_span(header: Header, lines: List(Line)) -> node.Span {

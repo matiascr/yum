@@ -3,6 +3,7 @@ import gleam/list
 import gleam/result
 import gleam/string
 import nibble/lexer
+import yaml_render
 import yum/yaml/error.{type YamlError}
 import yum/yaml/lexer as yum_yaml_lexer
 import yum/yaml/token.{type Token}
@@ -72,7 +73,7 @@ fn snap(
 ) {
   assert result.is_ok({
     use unwrapped <- result.try(unwrap_token(tokens))
-    let result = string.inspect(unwrapped)
+    let result = yaml_render.tokens(unwrapped)
 
     let snap_contents =
       "Input:\n\n```yaml\n"

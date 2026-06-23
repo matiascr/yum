@@ -11,6 +11,13 @@ pub fn lexer() -> Matcher(Token, Context) {
   case lexeme, lookahead {
     "\n", "" -> lexer.Drop(prev)
     "\n", "\n" -> token.BlockScalarLine(0, "") |> lexer.Keep(ctx)
+    "\n", _ ->
+      case lookahead {
+        " " | "\t" -> lexer.Skip
+        _ ->
+          token.Indentation(0)
+          |> lexer.Keep(context.FlowStyle(prev: context.BlockStyle(indent: 0)))
+      }
 
     "\n" <> line, "\n" | "\n" <> line, "" -> {
       let #(indent, content) = split_indent(line)

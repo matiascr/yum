@@ -2,6 +2,7 @@ import birdie
 import gleam/result
 import gleam/string
 import yaml_helpers as helpers
+import yaml_render
 
 const test_file_prefix = "parser:block_scalar:"
 
@@ -64,7 +65,7 @@ pub fn preserves_extra_indentation_block_scalar_test() {
 fn snap(parsed: _, input: String, title: String) {
   assert result.is_ok({
     use yaml <- result.try(parsed)
-    let result = string.inspect(yaml)
+    let result = yaml_render.ast(yaml)
 
     let snap_contents =
       "Input:\n\n```yaml\n"

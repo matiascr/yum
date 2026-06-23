@@ -1,7 +1,9 @@
 import birdie
 import gleam/result
 import gleam/string
+import yaml_ast.{type YamlAST}
 import yaml_helpers as helpers
+import yaml_render
 import yum/yaml
 import yum/yaml/error
 import yum/yaml/node
@@ -29,7 +31,7 @@ pub fn multiple_documents_test() {
 
   input
   |> helpers.parse_ast_stream()
-  |> snap(input, "multiple_documents_test")
+  |> snap_stream(input, "multiple_documents_test")
 }
 
 pub fn empty_explicit_document_test() {
@@ -37,7 +39,7 @@ pub fn empty_explicit_document_test() {
 
   input
   |> helpers.parse_ast_stream()
-  |> snap(input, "empty_explicit_document_test")
+  |> snap_stream(input, "empty_explicit_document_test")
 }
 
 pub fn end_marker_before_bare_document_test() {
@@ -45,7 +47,7 @@ pub fn end_marker_before_bare_document_test() {
 
   input
   |> helpers.parse_ast_stream()
-  |> snap(input, "end_marker_before_bare_document_test")
+  |> snap_stream(input, "end_marker_before_bare_document_test")
 }
 
 pub fn marker_like_scalars_test() {
@@ -62,7 +64,7 @@ pub fn markers_around_block_collections_test() {
 
   input
   |> helpers.parse_ast_stream()
-  |> snap(input, "markers_around_block_collections_test")
+  |> snap_stream(input, "markers_around_block_collections_test")
 }
 
 pub fn parse_document_preserves_yaml_directive_test() {
@@ -124,10 +126,38 @@ pub fn stream_rejects_unmarked_second_document_test() {
   assert helpers.parse_ast_stream("one\nkey: value") |> result.is_error()
 }
 
-fn snap(parsed: Result(a, error.YamlError), input: String, title: String) {
+fn snap(
+  parsed: Result(YamlAST, error.YamlError),
+  input: String,
+  title: String,
+) {
   assert result.is_ok({
     use yaml <- result.try(parsed)
-    let result = string.inspect(yaml)
+    let result = yaml_render.ast(yaml)
+
+    let snap_contents =
+      "Input:\n\n```yaml\n"
+      <> input
+      <> "\n```\n\n"
+      <> string.repeat("-", 71)
+      <> "\n\n```gleam\n"
+      <> result
+      <> "\n\n```"
+
+    snap_contents
+    |> birdie.snap(test_file_prefix <> title)
+    |> Ok
+  })
+}
+
+fn snap_stream(
+  parsed: Result(List(YamlAST), error.YamlError),
+  input: String,
+  title: String,
+) {
+  assert result.is_ok({
+    use yaml <- result.try(parsed)
+    let result = yaml_render.asts(yaml)
 
     let snap_contents =
       "Input:\n\n```yaml\n"
