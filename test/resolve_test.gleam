@@ -212,6 +212,107 @@ pub fn resolve_accepts_known_aliases_from_parsed_yaml_test() {
   assert yaml.resolve(document) |> result.is_ok()
 }
 
+pub fn resolve_expands_single_merge_key_test() {
+  let input =
+    "base: &base
+  image: ubuntu
+  retries: 1
+job:
+  <<: *base
+  script: gleam test
+"
+  let assert Ok(document) = yaml.parse(input)
+  let assert Ok(document) = yaml.resolve(document)
+
+  let assert option.Some(image) =
+    document
+    |> yaml.get([node.Key("job"), node.Key("image")])
+  let assert option.Some(retries) =
+    document
+    |> yaml.get([node.Key("job"), node.Key("retries")])
+  let assert option.Some(script) =
+    document
+    |> yaml.get([node.Key("job"), node.Key("script")])
+  let assert option.None =
+    document
+    |> yaml.get([node.Key("job"), node.Key("<<")])
+
+  assert node.as_string(image) == Ok("ubuntu")
+  assert node.as_int(retries) == Ok(1)
+  assert node.as_string(script) == Ok("gleam test")
+}
+
+pub fn resolve_merge_sequence_respects_override_order_test() {
+  let input =
+    "defaults: &defaults
+  image: ubuntu
+  retries: 1
+overrides: &overrides
+  retries: 2
+  script: gleam test
+job:
+  <<: [*overrides, *defaults]
+  image: alpine
+"
+  let assert Ok(document) = yaml.parse(input)
+  let assert Ok(document) = yaml.resolve(document)
+
+  let assert option.Some(image) =
+    document
+    |> yaml.get([node.Key("job"), node.Key("image")])
+  let assert option.Some(retries) =
+    document
+    |> yaml.get([node.Key("job"), node.Key("retries")])
+  let assert option.Some(script) =
+    document
+    |> yaml.get([node.Key("job"), node.Key("script")])
+
+  assert node.as_string(image) == Ok("alpine")
+  assert node.as_int(retries) == Ok(2)
+  assert node.as_string(script) == Ok("gleam test")
+  assert yaml.diagnostics(document) == []
+}
+
+pub fn resolve_expands_direct_mapping_merge_test() {
+  let input =
+    "job:
+  <<:
+    image: ubuntu
+    retries: 1
+  script: gleam test
+"
+  let assert Ok(document) = yaml.parse(input)
+  let assert Ok(document) = yaml.resolve(document)
+
+  let assert option.Some(image) =
+    document
+    |> yaml.get([node.Key("job"), node.Key("image")])
+  let assert option.Some(retries) =
+    document
+    |> yaml.get([node.Key("job"), node.Key("retries")])
+
+  assert node.as_string(image) == Ok("ubuntu")
+  assert node.as_int(retries) == Ok(1)
+}
+
+pub fn resolve_rejects_scalar_merge_targets_test() {
+  let input =
+    "base: &base nope
+job:
+  <<: *base
+"
+  let assert Ok(document) = yaml.parse(input)
+  let assert Error([error]) = yaml.resolve(document)
+
+  assert error
+    == diagnostic.InvalidMergeTarget(
+      found: node.StringKind,
+      span: node.Span(start: node.Position(3, 7), end: node.Position(3, 12)),
+    )
+  assert diagnostic.severity(error) == diagnostic.DiagnosticError
+  assert diagnostic.message(error) == "Merge key must reference a mapping"
+}
+
 pub fn resolve_rejects_unknown_aliases_from_parsed_yaml_test() {
   let assert Ok(document) = yaml.parse("copy: *base\n")
   let assert Error([error]) = yaml.resolve(document)

@@ -79,34 +79,34 @@ pub type Kind {
 /// This is useful in diagnostics and access errors where carrying the full node
 /// value would be noisy.
 pub type KindName {
-  /// The lightweight name for [`Null`](#YamlKind).
+  /// The lightweight name for [`Null`](#Kind).
   NullKind
 
-  /// The lightweight name for [`Bool`](#YamlKind).
+  /// The lightweight name for [`Bool`](#Kind).
   BoolKind
 
-  /// The lightweight name for [`Int`](#YamlKind).
+  /// The lightweight name for [`Int`](#Kind).
   IntKind
 
-  /// The lightweight name for [`Float`](#YamlKind).
+  /// The lightweight name for [`Float`](#Kind).
   FloatKind
 
-  /// The lightweight name for [`PosInf`](#YamlKind).
+  /// The lightweight name for [`PosInf`](#Kind).
   PosInfKind
 
-  /// The lightweight name for [`NegInf`](#YamlKind).
+  /// The lightweight name for [`NegInf`](#Kind).
   NegInfKind
 
-  /// The lightweight name for [`Nan`](#YamlKind).
+  /// The lightweight name for [`Nan`](#Kind).
   NanKind
 
-  /// The lightweight name for [`String`](#YamlKind).
+  /// The lightweight name for [`String`](#Kind).
   StringKind
 
-  /// The lightweight name for [`Sequence`](#YamlKind).
+  /// The lightweight name for [`Sequence`](#Kind).
   SequenceKind
 
-  /// The lightweight name for [`Mapping`](#YamlKind).
+  /// The lightweight name for [`Mapping`](#Kind).
   MappingKind
 }
 
@@ -120,7 +120,7 @@ pub type AccessError {
 /// The source style used to write a YAML node.
 ///
 /// Style records presentation details that are useful for tooling and
-/// diagnostics. It does not change the semantic [`YamlKind`](#YamlKind).
+/// diagnostics. It does not change the semantic [`Kind`](#Kind).
 pub type Style {
   /// A plain scalar with no quotes or block marker.
   ///

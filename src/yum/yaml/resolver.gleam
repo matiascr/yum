@@ -5,12 +5,18 @@
 //// expansion, and document-wide diagnostics.
 
 import gleam/dict.{type Dict}
+import gleam/float
+import gleam/int
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/string
 import yum/yaml/diagnostic.{type Diagnostic}
 import yum/yaml/document
 import yum/yaml/node.{type Node}
+
+type ResolvedMappingEntry {
+  ResolvedMappingEntry(key: Node, value: Node, anchors: Dict(String, Node))
+}
 
 /// Resolves a parsed document root and directives.
 ///
@@ -28,11 +34,15 @@ pub fn resolve(
     root
     |> resolve_node_tags(tag_handles)
 
+  let property_diagnostics = diagnostic.collect(root)
+  let #(root, _, merge_diagnostics) = resolve_node_merges(root, dict.new())
+
   let diagnostics =
     []
     |> list.append(directive_diagnostics)
     |> list.append(tag_diagnostics)
-    |> list.append(diagnostic.collect(root))
+    |> list.append(property_diagnostics)
+    |> list.append(merge_diagnostics)
 
   case diagnostic.has_errors(diagnostics) {
     True -> Error(diagnostics)
@@ -148,6 +158,247 @@ fn resolve_mapping_tags(
   #(list.reverse(entries), diagnostics)
 }
 
+fn resolve_node_merges(
+  value: Node,
+  anchors: Dict(String, Node),
+) -> #(Node, Dict(String, Node), List(Diagnostic)) {
+  let #(kind, anchors, nested_diagnostics) = case node.kind(value) {
+    node.Sequence(entries) -> {
+      let #(entries, anchors, diagnostics) =
+        resolve_sequence_merges(entries, anchors)
+      #(node.Sequence(entries), anchors, diagnostics)
+    }
+
+    node.Mapping(entries) -> {
+      let #(entries, anchors, diagnostics) =
+        resolve_mapping_merges(entries, anchors)
+      #(node.Mapping(entries), anchors, diagnostics)
+    }
+
+    kind -> #(kind, anchors, [])
+  }
+
+  let value = rebuild(value, kind)
+  let anchors = register_anchor(anchors, value)
+
+  #(value, anchors, nested_diagnostics)
+}
+
+fn resolve_sequence_merges(
+  entries: List(Node),
+  anchors: Dict(String, Node),
+) -> #(List(Node), Dict(String, Node), List(Diagnostic)) {
+  let #(entries, anchors, diagnostics) =
+    list.fold(entries, #([], anchors, []), fn(acc, entry) {
+      let #(entries, anchors, diagnostics) = acc
+      let #(entry, anchors, entry_diagnostics) =
+        resolve_node_merges(entry, anchors)
+
+      #(
+        [entry, ..entries],
+        anchors,
+        list.append(diagnostics, entry_diagnostics),
+      )
+    })
+
+  #(list.reverse(entries), anchors, diagnostics)
+}
+
+fn resolve_mapping_merges(
+  entries: List(#(Node, Node)),
+  anchors: Dict(String, Node),
+) -> #(List(#(Node, Node)), Dict(String, Node), List(Diagnostic)) {
+  let #(entries, anchors, diagnostics) =
+    list.fold(entries, #([], anchors, []), fn(acc, entry) {
+      let #(entries, anchors, diagnostics) = acc
+      let #(key, value) = entry
+      let #(key, anchors, key_diagnostics) = resolve_node_merges(key, anchors)
+      let #(value, anchors, value_diagnostics) =
+        resolve_node_merges(value, anchors)
+
+      #(
+        [ResolvedMappingEntry(key:, value:, anchors:), ..entries],
+        anchors,
+        diagnostics
+          |> list.append(key_diagnostics)
+          |> list.append(value_diagnostics),
+      )
+    })
+
+  let #(entries, merge_diagnostics) =
+    entries
+    |> list.reverse()
+    |> expand_mapping_merges()
+
+  #(entries, anchors, list.append(diagnostics, merge_diagnostics))
+}
+
+fn expand_mapping_merges(
+  entries: List(ResolvedMappingEntry),
+) -> #(List(#(Node, Node)), List(Diagnostic)) {
+  let explicit_entries =
+    entries
+    |> list.filter_map(fn(entry) {
+      case is_merge_key(entry.key) {
+        True -> Error(Nil)
+        False -> Ok(#(entry.key, entry.value))
+      }
+    })
+
+  let #(merged_entries, diagnostics) =
+    list.fold(entries, #([], []), fn(acc, entry) {
+      let #(merged_entries, diagnostics) = acc
+
+      case is_merge_key(entry.key) {
+        False -> acc
+        True -> {
+          let #(entries, entry_diagnostics) =
+            expand_merge_value(entry.value, entry.anchors)
+
+          #(
+            list.append(merged_entries, entries),
+            list.append(diagnostics, entry_diagnostics),
+          )
+        }
+      }
+    })
+
+  let merged_entries =
+    merged_entries
+    |> deduplicate_merged_entries(seen_key_identities(explicit_entries))
+
+  #(list.append(explicit_entries, merged_entries), diagnostics)
+}
+
+fn expand_merge_value(
+  value: Node,
+  anchors: Dict(String, Node),
+) -> #(List(#(Node, Node)), List(Diagnostic)) {
+  case node.alias(value) {
+    Some(alias) ->
+      case dict.get(anchors, alias) {
+        Ok(target) -> merge_target_entries(target, node.span(value))
+        Error(_) -> #([], [])
+      }
+
+    None ->
+      case node.kind(value) {
+        node.Mapping(entries) -> #(entries, [])
+        node.Sequence(entries) -> expand_merge_sequence(entries, anchors)
+        _ -> #([], [
+          diagnostic.InvalidMergeTarget(
+            found: node.kind_name(value),
+            span: node.span(value),
+          ),
+        ])
+      }
+  }
+}
+
+fn expand_merge_sequence(
+  entries: List(Node),
+  anchors: Dict(String, Node),
+) -> #(List(#(Node, Node)), List(Diagnostic)) {
+  list.fold(entries, #([], []), fn(acc, entry) {
+    let #(merged_entries, diagnostics) = acc
+    let #(entries, entry_diagnostics) =
+      expand_merge_sequence_entry(entry, anchors)
+
+    #(
+      list.append(merged_entries, entries),
+      list.append(diagnostics, entry_diagnostics),
+    )
+  })
+}
+
+fn expand_merge_sequence_entry(
+  entry: Node,
+  anchors: Dict(String, Node),
+) -> #(List(#(Node, Node)), List(Diagnostic)) {
+  case node.alias(entry) {
+    Some(alias) ->
+      case dict.get(anchors, alias) {
+        Ok(target) -> merge_target_entries(target, node.span(entry))
+        Error(_) -> #([], [])
+      }
+
+    None -> merge_target_entries(entry, node.span(entry))
+  }
+}
+
+fn merge_target_entries(
+  target: Node,
+  span: node.Span,
+) -> #(List(#(Node, Node)), List(Diagnostic)) {
+  case node.kind(target) {
+    node.Mapping(entries) -> #(entries, [])
+    _ -> #([], [
+      diagnostic.InvalidMergeTarget(found: node.kind_name(target), span:),
+    ])
+  }
+}
+
+fn deduplicate_merged_entries(
+  entries: List(#(Node, Node)),
+  seen: Dict(String, Nil),
+) -> List(#(Node, Node)) {
+  let #(entries, _) =
+    list.fold(entries, #([], seen), fn(acc, entry) {
+      let #(entries, seen) = acc
+      let #(key, _) = entry
+
+      case key_identity(key) {
+        None -> #([entry, ..entries], seen)
+        Some(identity) ->
+          case dict.has_key(seen, identity) {
+            True -> acc
+            False -> #([entry, ..entries], dict.insert(seen, identity, Nil))
+          }
+      }
+    })
+
+  list.reverse(entries)
+}
+
+fn seen_key_identities(entries: List(#(Node, Node))) -> Dict(String, Nil) {
+  list.fold(entries, dict.new(), fn(seen, entry) {
+    let #(key, _) = entry
+
+    case key_identity(key) {
+      None -> seen
+      Some(identity) -> dict.insert(seen, identity, Nil)
+    }
+  })
+}
+
+fn is_merge_key(key: Node) -> Bool {
+  case node.tag(key) {
+    Some("tag:yaml.org,2002:merge") -> True
+    _ ->
+      case node.kind(key) {
+        node.String("<<") -> True
+        _ -> False
+      }
+  }
+}
+
+fn register_anchor(
+  anchors: Dict(String, Node),
+  value: Node,
+) -> Dict(String, Node) {
+  case node.anchor(value) {
+    Some(anchor) -> dict.insert(anchors, anchor, value)
+    None -> anchors
+  }
+}
+
+fn rebuild(source: Node, kind: node.Kind) -> Node {
+  node.new(kind, span: node.span(source), style: node.style(source))
+  |> apply_tag(node.tag(source))
+  |> copy_anchor(from: source)
+  |> copy_alias(from: source)
+}
+
 fn resolve_tag(
   tag: Option(String),
   handles: Dict(String, String),
@@ -222,5 +473,26 @@ fn copy_alias(value: Node, from source: Node) -> Node {
   case node.alias(source) {
     Some(alias) -> node.with_alias(value, alias)
     None -> value
+  }
+}
+
+fn key_identity(key: Node) -> Option(String) {
+  case node.kind(key) {
+    node.Null -> Some("null:")
+    node.Bool(value) -> Some("bool:" <> bool_identity(value))
+    node.Int(value) -> Some("int:" <> int.to_string(value))
+    node.Float(value) -> Some("float:" <> float.to_string(value))
+    node.PosInf -> Some("float:.inf")
+    node.NegInf -> Some("float:-.inf")
+    node.Nan -> Some("float:.nan")
+    node.String(value) -> Some("string:" <> value)
+    node.Sequence(_) | node.Mapping(_) -> None
+  }
+}
+
+fn bool_identity(value: Bool) -> String {
+  case value {
+    True -> "true"
+    False -> "false"
   }
 }

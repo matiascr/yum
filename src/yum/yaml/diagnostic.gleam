@@ -40,6 +40,9 @@ pub type Diagnostic {
 
   /// A node tag uses a handle that has not been declared for the document.
   UnknownTagHandle(handle: String, span: Span)
+
+  /// A merge key points at a value that is not a mapping.
+  InvalidMergeTarget(found: node.KindName, span: Span)
 }
 
 type SeenKey {
@@ -174,6 +177,7 @@ pub fn severity(diagnostic: Diagnostic) -> Severity {
     UnknownAlias(..) -> DiagnosticError
     InvalidTagDirective(..) -> DiagnosticError
     UnknownTagHandle(..) -> DiagnosticError
+    InvalidMergeTarget(..) -> DiagnosticError
   }
 }
 
@@ -212,6 +216,7 @@ pub fn message(diagnostic: Diagnostic) -> String {
     UnknownAlias(alias:, ..) -> "Unknown alias `" <> alias <> "`"
     InvalidTagDirective(..) -> "Invalid %TAG directive"
     UnknownTagHandle(handle:, ..) -> "Unknown tag handle `" <> handle <> "`"
+    InvalidMergeTarget(..) -> "Merge key must reference a mapping"
   }
 }
 
@@ -223,6 +228,7 @@ pub fn span(diagnostic: Diagnostic) -> Span {
     UnknownAlias(span:, ..) -> span
     InvalidTagDirective(span:) -> span
     UnknownTagHandle(span:, ..) -> span
+    InvalidMergeTarget(span:, ..) -> span
   }
 }
 
@@ -234,6 +240,7 @@ pub fn related(diagnostic: Diagnostic) -> List(Related) {
     UnknownAlias(..) -> []
     InvalidTagDirective(..) -> []
     UnknownTagHandle(..) -> []
+    InvalidMergeTarget(..) -> []
   }
 }
 

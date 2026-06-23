@@ -23,14 +23,14 @@ YAML checks:
 ```gleam
 import gleam/option.{type Option, None}
 import yum/yaml
-import yum/yaml/node.{type YamlNode}
+import yum/yaml/node.{type Node}
 
-pub fn image(input: String) -> Option(YamlNode) {
+pub fn image(input: String) -> Option(Node) {
   case yaml.parse(input) {
     Ok(document) -> document |> yaml.get([node.Key("image")])
     Error(_) -> None
   }
-  // -> Some(YamlNode(...))
+  // -> Some(Node(...))
 }
 
 pub fn check(input: String) {
