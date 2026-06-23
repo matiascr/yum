@@ -1,8 +1,10 @@
 import gleam/float
 import gleam/int
 import gleam/list
+import gleam/option.{Some}
 import gleam/string
 import yum/yaml/node.{type YamlNode}
+import yum/yaml/parser/scalar
 
 pub fn to_string(value: YamlNode) -> String {
   emit(value, 0)
@@ -30,13 +32,26 @@ fn emit_sequence(entries: List(YamlNode), indent: Int) -> String {
     [_, ..] ->
       entries
       |> list.map(fn(entry) {
-        let nested_indent = indent + 2
         case node.kind(entry) {
-          node.Mapping(_) | node.Sequence(_) ->
-            spaces(indent) <> "- " <> emit(entry, nested_indent)
-          _ -> spaces(indent) <> "- " <> emit(entry, nested_indent)
+          node.Mapping([_, ..]) | node.Sequence([_, ..]) ->
+            emit_nested_sequence_entry(entry, indent)
+          _ -> spaces(indent) <> "- " <> emit(entry, indent + 2)
         }
       })
+      |> string.join(with: "\n")
+  }
+}
+
+fn emit_nested_sequence_entry(entry: YamlNode, indent: Int) -> String {
+  let nested_indent = indent + 2
+
+  case string.split(emit(entry, nested_indent), "\n") {
+    [] -> spaces(indent) <> "- "
+    [first, ..rest] ->
+      [
+        spaces(indent) <> "- " <> string.drop_start(first, nested_indent),
+        ..rest
+      ]
       |> string.join(with: "\n")
   }
 }
@@ -98,7 +113,9 @@ fn wrap_quotes(value: String) -> String {
 
 fn needs_quotes(value: String) -> Bool {
   string.is_empty(value)
+  || string.trim(value) != value
   || string.contains(value, "\n")
+  || string.contains(value, ":")
   || string.contains(value, "#")
   || string.contains(value, "[")
   || string.contains(value, "]")
@@ -106,22 +123,13 @@ fn needs_quotes(value: String) -> Bool {
   || string.contains(value, "}")
   || string.contains(value, ",")
   || string.contains(value, "\"")
-  || is_reserved_plain_scalar(value)
+  || plain_scalar_would_change_type(value)
 }
 
-fn is_reserved_plain_scalar(value: String) -> Bool {
-  case value {
-    "null"
-    | "Null"
-    | "NULL"
-    | "~"
-    | "true"
-    | "True"
-    | "TRUE"
-    | "false"
-    | "False"
-    | "FALSE" -> True
-    _ -> False
+fn plain_scalar_would_change_type(value: String) -> Bool {
+  case scalar.parse(value) {
+    Some(node.String(parsed)) if parsed == value -> False
+    _ -> True
   }
 }
 
