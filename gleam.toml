@@ -26,7 +26,6 @@ internal_modules = [
 [dependencies]
 gleam_stdlib = ">= 1.0.0 and < 2.0.0"
 nibble = { git = "git@github.com:matiascr/nibble.git", ref = "main" }
-gleam_regexp = ">= 1.1.1 and < 2.0.0"
 
 [dev_dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"
