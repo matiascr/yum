@@ -1,33 +1,31 @@
 //// Builders for YAML nodes.
 
-import yum/yaml/node
+import yum/yaml/node.{type YamlNode}
 
-pub fn null() -> node.YamlNode {
+pub fn null() -> YamlNode {
   node.synthetic(node.Null)
 }
 
-pub fn bool(value: Bool) -> node.YamlNode {
+pub fn bool(value: Bool) -> YamlNode {
   node.synthetic(node.Bool(value))
 }
 
-pub fn int(value: Int) -> node.YamlNode {
+pub fn int(value: Int) -> YamlNode {
   node.synthetic(node.Int(value))
 }
 
-pub fn float(value: Float) -> node.YamlNode {
+pub fn float(value: Float) -> YamlNode {
   node.synthetic(node.Float(value))
 }
 
-pub fn string(value: String) -> node.YamlNode {
+pub fn string(value: String) -> YamlNode {
   node.synthetic(node.String(value))
 }
 
-pub fn sequence(entries: List(node.YamlNode)) -> node.YamlNode {
+pub fn sequence(entries: List(YamlNode)) -> YamlNode {
   node.synthetic(node.Sequence(entries))
 }
 
-pub fn mapping(
-  entries: List(#(node.YamlNode, node.YamlNode)),
-) -> node.YamlNode {
+pub fn mapping(entries: List(#(YamlNode, YamlNode))) -> YamlNode {
   node.synthetic(node.Mapping(entries))
 }

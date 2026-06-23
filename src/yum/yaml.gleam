@@ -26,7 +26,7 @@ import yum/yaml/dynamic as yaml_dynamic
 import yum/yaml/emitter
 import yum/yaml/error.{type YamlError}
 import yum/yaml/lexer
-import yum/yaml/node
+import yum/yaml/node.{type YamlNode}
 import yum/yaml/parser
 
 pub type DecodeError {
@@ -67,6 +67,26 @@ pub fn parse_ast(input: String) -> Result(YamlAST, YamlError) {
 /// Parses a YAML stream into the AST nodes for each document's contents.
 ///
 pub fn parse_ast_stream(input: String) -> Result(List(YamlAST), YamlError) {
+  input
+  |> parse_node_stream()
+  |> result.map(list.map(_, node.to_ast))
+}
+
+/// Parses a YAML file into an opaque tooling node for its document contents.
+///
+pub fn parse_node(input: String) -> Result(YamlNode, YamlError) {
+  use documents <- result.try(parse_node_stream(input))
+
+  case documents {
+    [document] -> Ok(document)
+    [_, _, ..] -> Error(error.MultipleDocuments)
+    [] -> Error(error.UnexpectedEndOfInput)
+  }
+}
+
+/// Parses a YAML stream into opaque tooling nodes.
+///
+pub fn parse_node_stream(input: String) -> Result(List(YamlNode), YamlError) {
   use input <- result.try(normalize_whitespace(input, 0))
   use input <- result.try(normalize_indents(input))
 
@@ -75,27 +95,9 @@ pub fn parse_ast_stream(input: String) -> Result(List(YamlAST), YamlError) {
   Ok(parsed)
 }
 
-/// Parses a YAML file into an opaque tooling node for its document contents.
-///
-pub fn parse_node(input: String) -> Result(node.YamlNode, YamlError) {
-  input
-  |> parse_ast()
-  |> result.map(node.from_ast)
-}
-
-/// Parses a YAML stream into opaque tooling nodes.
-///
-pub fn parse_node_stream(
-  input: String,
-) -> Result(List(node.YamlNode), YamlError) {
-  input
-  |> parse_ast_stream()
-  |> result.map(list.map(_, node.from_ast))
-}
-
 /// Converts a span-aware YAML node to Gleam dynamic data for use with decoders.
 ///
-pub fn to_dynamic(node: node.YamlNode) -> Dynamic {
+pub fn to_dynamic(node: YamlNode) -> Dynamic {
   yaml_dynamic.from_node(node)
 }
 
@@ -121,7 +123,7 @@ pub fn decode(
 
 /// Emits a deterministic YAML string from a YAML node and validates the output.
 ///
-pub fn to_string(node: node.YamlNode) -> Result(String, YamlError) {
+pub fn to_string(node: YamlNode) -> Result(String, YamlError) {
   let rendered = emitter.to_string(node)
   use _ <- result.try(parse_ast(rendered))
   Ok(rendered)

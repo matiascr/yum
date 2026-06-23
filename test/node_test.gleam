@@ -12,8 +12,11 @@ pub fn parse_node_exposes_kind_and_accessors_test() {
 
   assert node.as_string(key) == option.Some("name")
   assert node.as_string(value) == option.Some("yum")
-  assert node.style(document) == node.Synthetic
-  assert node.span(document) == node.synthetic_span()
+  assert node.style(document) == node.BlockMapping
+  assert node.style(key) == node.PlainScalar
+  assert node.style(value) == node.DoubleQuotedScalar
+  assert node.span(document)
+    == node.Span(start: node.Position(1, 1), end: node.Position(1, 12))
 }
 
 pub fn get_retrieves_nested_mapping_values_test() {
@@ -26,6 +29,24 @@ pub fn get_retrieves_nested_mapping_values_test() {
   let assert option.Some(command) = node.get(script, [node.Index(0)])
 
   assert node.as_string(command) == option.Some("gleam")
+}
+
+pub fn parse_node_tracks_flow_collection_style_and_span_test() {
+  let assert Ok(document) = yaml.parse_node("commands: [gleam, test]\n")
+  let assert option.Some(commands) = node.get(document, [node.Key("commands")])
+
+  assert node.style(commands) == node.FlowSequence
+  assert node.span(commands)
+    == node.Span(start: node.Position(1, 11), end: node.Position(1, 24))
+}
+
+pub fn parse_node_tracks_block_scalar_style_and_span_test() {
+  let assert Ok(document) = yaml.parse_node("script: |\n  gleam test\n")
+  let assert option.Some(script) = node.get(document, [node.Key("script")])
+
+  assert node.style(script) == node.LiteralBlockScalar
+  assert node.span(script)
+    == node.Span(start: node.Position(1, 9), end: node.Position(2, 13))
 }
 
 pub fn decode_uses_dynamic_decoders_test() {

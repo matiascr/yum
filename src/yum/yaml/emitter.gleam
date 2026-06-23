@@ -2,13 +2,13 @@ import gleam/float
 import gleam/int
 import gleam/list
 import gleam/string
-import yum/yaml/node
+import yum/yaml/node.{type YamlNode}
 
-pub fn to_string(value: node.YamlNode) -> String {
+pub fn to_string(value: YamlNode) -> String {
   emit(value, 0)
 }
 
-fn emit(value: node.YamlNode, indent: Int) -> String {
+fn emit(value: YamlNode, indent: Int) -> String {
   case node.kind(value) {
     node.Null -> "null"
     node.Bool(True) -> "true"
@@ -24,7 +24,7 @@ fn emit(value: node.YamlNode, indent: Int) -> String {
   }
 }
 
-fn emit_sequence(entries: List(node.YamlNode), indent: Int) -> String {
+fn emit_sequence(entries: List(YamlNode), indent: Int) -> String {
   case entries {
     [] -> "[]"
     [_, ..] ->
@@ -41,10 +41,7 @@ fn emit_sequence(entries: List(node.YamlNode), indent: Int) -> String {
   }
 }
 
-fn emit_mapping(
-  entries: List(#(node.YamlNode, node.YamlNode)),
-  indent: Int,
-) -> String {
+fn emit_mapping(entries: List(#(YamlNode, YamlNode)), indent: Int) -> String {
   case entries {
     [] -> "{}"
     [_, ..] ->
@@ -66,7 +63,7 @@ fn emit_mapping(
   }
 }
 
-fn emit_key(value: node.YamlNode) -> String {
+fn emit_key(value: YamlNode) -> String {
   case node.kind(value) {
     node.String(value) -> emit_key_string(value)
     _ -> emit(value, 0)

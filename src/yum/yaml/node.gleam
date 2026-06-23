@@ -45,10 +45,16 @@ pub type YamlStyle {
   Synthetic
 }
 
+/// A half-open source span for a parsed YAML node.
+///
+/// Parsed spans use 1-based row and column positions. Builder-created nodes use
+/// `synthetic_span`.
 pub type Span {
   Span(start: Position, end: Position)
 }
 
+/// A 1-based source position.
+///
 pub type Position {
   Position(row: Int, column: Int)
 }
@@ -58,6 +64,11 @@ pub type PathSegment {
   Index(Int)
 }
 
+/// Creates a YAML node with explicit metadata.
+///
+/// Most callers should prefer `yum/yaml.parse_node` for parsed input or
+/// `yum/yaml/builder` for generated YAML. This constructor is public for tools
+/// that need to synthesize nodes while preserving their own source metadata.
 pub fn new(
   kind: YamlKind,
   span span: Span,
@@ -70,6 +81,8 @@ pub fn synthetic(kind: YamlKind) -> YamlNode {
   new(kind, span: synthetic_span(), style: Synthetic)
 }
 
+/// Returns the placeholder span used for generated nodes with no source.
+///
 pub fn synthetic_span() -> Span {
   Span(start: Position(0, 0), end: Position(0, 0))
 }

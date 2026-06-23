@@ -5,8 +5,9 @@ import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
 import nibble.{type Parser, do, return}
-import yum/yaml/ast.{type YamlAST} as yaml
 import yum/yaml/lexer/context.{type Context}
+import yum/yaml/node.{type YamlNode}
+import yum/yaml/parser/span
 import yum/yaml/token.{type Token}
 
 /// Raw text and escape tokens need different folding rules, especially around
@@ -17,8 +18,9 @@ type DoubleQuotedElement {
   EscapedLineBreak
 }
 
-pub fn parser() -> Parser(YamlAST, Token, Context) {
+pub fn parser() -> Parser(YamlNode, Token, Context) {
   use _ <- do(nibble.token(token.DoubleQuote))
+  use start <- do(nibble.span())
   use elements <- do(
     nibble.many({
       use token <- nibble.take_map("Expected a double quoted value")
@@ -30,9 +32,12 @@ pub fn parser() -> Parser(YamlAST, Token, Context) {
     }),
   )
   use _ <- do(nibble.token(token.DoubleQuote))
+  use end <- do(nibble.span())
+
   elements
   |> render_elements()
-  |> yaml.String
+  |> node.String
+  |> node.new(span: span.between(start, end), style: node.DoubleQuotedScalar)
   |> return
 }
 

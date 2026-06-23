@@ -3,46 +3,84 @@ import gleam/list
 import gleam/option.{None, Some}
 import gleam/string
 import nibble.{type Parser, do, return}
-import yum/yaml/ast.{type YamlAST} as yaml
 import yum/yaml/lexer/context.{type Context}
+import yum/yaml/node.{type YamlNode}
+import yum/yaml/parser/span
 import yum/yaml/token.{type BlockScalarStyle, type Chomp, type Token}
 
 type Header {
-  Header(style: BlockScalarStyle, chomp: Chomp, parent_indent: Int)
+  Header(
+    style: BlockScalarStyle,
+    chomp: Chomp,
+    parent_indent: Int,
+    span: node.Span,
+  )
 }
 
 type Line {
-  Line(indent: Int, content: String)
+  Line(indent: Int, content: String, span: node.Span)
 }
 
-pub fn parser() -> Parser(YamlAST, Token, Context) {
+pub fn parser() -> Parser(YamlNode, Token, Context) {
   use header <- do(header_parser())
   use lines <- do(nibble.many(line_parser()))
+  let style = case header.style {
+    token.Literal -> node.LiteralBlockScalar
+    token.Folded -> node.FoldedBlockScalar
+  }
 
   render(header, lines)
-  |> yaml.String
+  |> node.String
+  |> node.new(span: block_span(header, lines), style:)
   |> return
 }
 
 fn header_parser() -> Parser(Header, Token, Context) {
-  use tok <- nibble.take_map("Expected a block scalar header")
-  case tok {
-    token.BlockScalarHeader(style:, chomp:, parent_indent:) ->
-      Some(Header(style:, chomp:, parent_indent:))
-    _ -> None
-  }
+  use header <- do(
+    nibble.take_map("Expected a block scalar header", fn(tok) {
+      case tok {
+        token.BlockScalarHeader(style:, chomp:, parent_indent:) ->
+          Some(#(style, chomp, parent_indent))
+        _ -> None
+      }
+    }),
+  )
+  use token_span <- do(nibble.span())
+  let #(style, chomp, parent_indent) = header
+
+  Header(style:, chomp:, parent_indent:, span: span.from_lexer(token_span))
+  |> return
 }
 
 fn line_parser() -> Parser(Line, Token, Context) {
-  use tok <- nibble.take_map("Expected a block scalar line")
-  case tok {
-    token.BlockScalarLine(indent:, content:) -> Some(Line(indent:, content:))
-    _ -> None
+  use line <- do(
+    nibble.take_map("Expected a block scalar line", fn(tok) {
+      case tok {
+        token.BlockScalarLine(indent:, content:) -> Some(#(indent, content))
+        _ -> None
+      }
+    }),
+  )
+  use token_span <- do(nibble.span())
+  let #(indent, content) = line
+
+  Line(indent:, content:, span: span.from_lexer(token_span))
+  |> return
+}
+
+fn block_span(header: Header, lines: List(Line)) -> node.Span {
+  case list.last(lines) {
+    Ok(line) -> {
+      let node.Span(start:, ..) = header.span
+      let node.Span(end:, ..) = line.span
+      node.Span(start:, end:)
+    }
+    Error(_) -> header.span
   }
 }
 
 fn render(header: Header, lines: List(Line)) -> String {
-  let Header(style:, chomp:, parent_indent:) = header
+  let Header(style:, chomp:, parent_indent:, ..) = header
   let normalized = normalize_lines(lines, parent_indent)
   let #(content_lines, trailing_empty_lines) = split_trailing_empty(normalized)
 
@@ -91,7 +129,7 @@ fn min_indent_loop(indents: List(Int), current: Int) -> Int {
 }
 
 fn normalize_line(line: Line, content_indent: Int) -> String {
-  let Line(indent:, content:) = line
+  let Line(indent:, content:, ..) = line
 
   case string.is_empty(content) {
     True -> ""

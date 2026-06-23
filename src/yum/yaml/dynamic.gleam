@@ -1,9 +1,9 @@
 import gleam/dynamic
 import gleam/list
 import yum/yaml/ast.{type YamlAST}
-import yum/yaml/node
+import yum/yaml/node.{type YamlNode}
 
-pub fn from_node(value: node.YamlNode) -> dynamic.Dynamic {
+pub fn from_node(value: YamlNode) -> dynamic.Dynamic {
   case node.kind(value) {
     node.Null -> dynamic.nil()
     node.Bool(value) -> dynamic.bool(value)

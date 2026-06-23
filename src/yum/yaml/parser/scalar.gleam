@@ -3,20 +3,34 @@ import gleam/int
 import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
-import nibble.{type Parser}
-import yum/yaml/ast.{type YamlAST} as yaml
+import nibble.{type Parser, do, return}
 import yum/yaml/lexer/context.{type Context}
+import yum/yaml/node.{type YamlNode}
+import yum/yaml/parser/span
 import yum/yaml/token.{type Token}
 
-pub fn parser() -> Parser(YamlAST, Token, Context) {
-  use tok <- nibble.take_map("Expected a value")
+pub fn parser() -> Parser(YamlNode, Token, Context) {
+  use parsed <- do(nibble.take_map("Expected a value", parsed_token))
+  use token_span <- do(nibble.span())
+  let #(kind, style) = parsed
+
+  node.new(kind, span: span.from_lexer(token_span), style:)
+  |> return
+}
+
+fn parsed_token(tok: Token) -> Option(#(node.YamlKind, node.YamlStyle)) {
   case tok {
-    token.SingleQuotedScalar(value:) | token.PlainScalar(value:) -> parse(value)
+    token.SingleQuotedScalar(value:) ->
+      parse(value)
+      |> option.map(fn(kind) { #(kind, node.SingleQuotedScalar) })
+    token.PlainScalar(value:) ->
+      parse(value)
+      |> option.map(fn(kind) { #(kind, node.PlainScalar) })
     _ -> None
   }
 }
 
-pub fn parse(value: String) -> Option(YamlAST) {
+pub fn parse(value: String) -> Option(node.YamlKind) {
   value
   |> parse_null()
   |> option.or(parse_bool(value))
@@ -26,25 +40,25 @@ pub fn parse(value: String) -> Option(YamlAST) {
   |> option.or(parse_inf(value))
   |> option.or(parse_nan(value))
   |> option.or(parse_float(value))
-  |> option.or(Some(yaml.String(value)))
+  |> option.or(Some(node.String(value)))
 }
 
-fn parse_null(input: String) -> Option(YamlAST) {
+fn parse_null(input: String) -> Option(node.YamlKind) {
   case input {
-    "null" | "Null" | "NULL" | "~" -> Some(yaml.Null)
+    "null" | "Null" | "NULL" | "~" -> Some(node.Null)
     _ -> None
   }
 }
 
-fn parse_bool(input: String) -> Option(YamlAST) {
+fn parse_bool(input: String) -> Option(node.YamlKind) {
   case input {
-    "true" | "True" | "TRUE" -> Some(yaml.Bool(True))
-    "false" | "False" | "FALSE" -> Some(yaml.Bool(False))
+    "true" | "True" | "TRUE" -> Some(node.Bool(True))
+    "false" | "False" | "FALSE" -> Some(node.Bool(False))
     _ -> None
   }
 }
 
-fn parse_int(input: String) -> Option(YamlAST) {
+fn parse_int(input: String) -> Option(node.YamlKind) {
   case input {
     "+" <> digits -> parse_decimal_int(digits, fn(n) { n })
     "-" <> digits -> parse_decimal_int(digits, int.negate)
@@ -52,53 +66,56 @@ fn parse_int(input: String) -> Option(YamlAST) {
   }
 }
 
-fn parse_decimal_int(input: String, sign: fn(Int) -> Int) -> Option(YamlAST) {
+fn parse_decimal_int(
+  input: String,
+  sign: fn(Int) -> Int,
+) -> Option(node.YamlKind) {
   case has_digits(input), all_decimal_digits(input) {
     True, True ->
       input
       |> int.parse()
       |> result.map(sign)
-      |> result.map(yaml.Int)
+      |> result.map(node.Int)
       |> option.from_result()
     _, _ -> None
   }
 }
 
-fn parse_octal(input: String) -> Option(YamlAST) {
+fn parse_octal(input: String) -> Option(node.YamlKind) {
   case input {
     "0o" <> digits ->
       case has_digits(digits), all_octal_digits(digits) {
         True, True ->
           int.base_parse(digits, 8)
           |> option.from_result()
-          |> option.map(yaml.Int)
+          |> option.map(node.Int)
         _, _ -> None
       }
     _ -> None
   }
 }
 
-fn parse_hexadecimal(input: String) -> Option(YamlAST) {
+fn parse_hexadecimal(input: String) -> Option(node.YamlKind) {
   case input {
     "0x" <> digits ->
       case has_digits(digits), all_hexadecimal_digits(digits) {
         True, True ->
           int.base_parse(digits, 16)
           |> option.from_result()
-          |> option.map(yaml.Int)
+          |> option.map(node.Int)
         _, _ -> None
       }
     _ -> None
   }
 }
 
-fn parse_float(input: String) -> Option(YamlAST) {
+fn parse_float(input: String) -> Option(node.YamlKind) {
   case string.contains(input, "."), has_decimal_digit(input) {
     True, True ->
       input
       |> parse_float_value()
       |> option.from_result()
-      |> option.map(yaml.Float)
+      |> option.map(node.Float)
     _, _ -> None
   }
 }
@@ -110,17 +127,17 @@ fn parse_float_value(input: String) -> Result(Float, Nil) {
   }
 }
 
-fn parse_inf(input: String) -> Option(YamlAST) {
+fn parse_inf(input: String) -> Option(node.YamlKind) {
   case input {
-    ".inf" | ".Inf" | ".INF" | "+.inf" | "+.Inf" | "+.INF" -> Some(yaml.PosInf)
-    "-.inf" | "-.Inf" | "-.INF" -> Some(yaml.NegInf)
+    ".inf" | ".Inf" | ".INF" | "+.inf" | "+.Inf" | "+.INF" -> Some(node.PosInf)
+    "-.inf" | "-.Inf" | "-.INF" -> Some(node.NegInf)
     _ -> None
   }
 }
 
-fn parse_nan(input: String) -> Option(YamlAST) {
+fn parse_nan(input: String) -> Option(node.YamlKind) {
   case input {
-    ".nan" | ".NaN" | ".NAN" -> Some(yaml.Nan)
+    ".nan" | ".NaN" | ".NAN" -> Some(node.Nan)
     _ -> None
   }
 }

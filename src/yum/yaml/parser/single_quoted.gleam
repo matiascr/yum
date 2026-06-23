@@ -1,13 +1,15 @@
 import gleam/option.{None, Some}
 import gleam/string
 import nibble.{type Parser, do, return}
-import yum/yaml/ast.{type YamlAST} as yaml
 import yum/yaml/lexer/context.{type Context}
+import yum/yaml/node.{type YamlNode}
 import yum/yaml/parser/double_quoted
+import yum/yaml/parser/span
 import yum/yaml/token.{type Token}
 
-pub fn parser() -> Parser(YamlAST, Token, Context) {
+pub fn parser() -> Parser(YamlNode, Token, Context) {
   use _ <- do(nibble.token(token.SingleQuote))
+  use start <- do(nibble.span())
   use parts <- do(
     nibble.many({
       use tok <- nibble.take_map("Expected a single quoted value")
@@ -47,10 +49,12 @@ pub fn parser() -> Parser(YamlAST, Token, Context) {
       }
     }),
   )
+  use end <- do(nibble.span())
 
   parts
   |> string.concat()
   |> double_quoted.fold_scalar(False)
-  |> yaml.String
+  |> node.String
+  |> node.new(span: span.between(start, end), style: node.SingleQuotedScalar)
   |> return
 }

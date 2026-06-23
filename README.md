@@ -20,9 +20,9 @@ accessor API:
 ```gleam
 import gleam/option.{type Option, None}
 import yum/yaml
-import yum/yaml/node
+import yum/yaml/node.{type YamlNode}
 
-pub fn image(input: String) -> Option(node.YamlNode) {
+pub fn image(input: String) -> Option(YamlNode) {
   case yaml.parse_node(input) {
     Ok(document) -> node.get(document, [node.Key("image")])
     Error(_) -> None
