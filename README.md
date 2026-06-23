@@ -11,6 +11,7 @@ import yum/yaml
 
 pub fn parse_document(input: String) {
   yaml.parse(input)
+  // -> Ok(Yaml(...))
 }
 ```
 
@@ -24,9 +25,10 @@ import yum/yaml/node.{type YamlNode}
 
 pub fn image(input: String) -> Option(YamlNode) {
   case yaml.parse_node(input) {
-    Ok(document) -> node.get(document, [node.Key("image")])
+    Ok(document) -> document |> node.get([node.Key("image")])
     Error(_) -> None
   }
+  // -> Some(YamlNode(...))
 }
 ```
 
@@ -38,8 +40,11 @@ import gleam/dynamic/decode
 import yum/yaml
 import yum/yaml/builder
 
-pub fn decode_name(input: String) {
+const input = "name: yum"
+
+pub fn decode_name() {
   yaml.decode(input, using: decode.field("name", decode.string))
+  // -> Ok("yum")
 }
 
 pub fn build_document() {
@@ -47,6 +52,24 @@ pub fn build_document() {
     #(builder.string("name"), builder.string("yum")),
   ])
   |> yaml.to_string()
+  // -> Ok("name: yum")
+}
+```
+
+For tooling, parse with diagnostics to keep non-fatal warnings such as duplicate
+mapping keys:
+
+```gleam
+import yum/yaml
+
+const input = "
+name: yum
+name: yaml
+"
+
+pub fn check() {
+  yaml.parse_node_with_diagnostics(input)
+  // -> Ok(Parsed(value: YamlNode(...), diagnostics: [DuplicateMappingKey(...)]))
 }
 ```
 

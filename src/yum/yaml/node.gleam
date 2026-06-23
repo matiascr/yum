@@ -156,9 +156,12 @@ pub fn as_float(node: YamlNode) -> Option(Float) {
 pub fn get(node: YamlNode, path: List(PathSegment)) -> Option(YamlNode) {
   case path {
     [] -> Some(node)
-    [Key(key), ..rest] -> get_key(node, key) |> option.then(get(_, rest))
-    [Index(index), ..rest] ->
+    [Key(key), ..rest] -> {
+      get_key(node, key) |> option.then(get(_, rest))
+    }
+    [Index(index), ..rest] -> {
       get_index(node, index) |> option.then(get(_, rest))
+    }
   }
 }
 

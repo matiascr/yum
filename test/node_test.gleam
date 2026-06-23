@@ -3,6 +3,7 @@ import gleam/option
 import gleam/result
 import yum/yaml
 import yum/yaml/builder
+import yum/yaml/diagnostic
 import yum/yaml/node
 
 pub fn parse_node_exposes_kind_and_accessors_test() {
@@ -95,4 +96,41 @@ pub fn get_index_rejects_negative_indexes_test() {
     ])
 
   assert node.get_index(document, -1) == option.None
+}
+
+pub fn parse_node_with_diagnostics_warns_for_duplicate_keys_test() {
+  let assert Ok(yaml.Parsed(value: document, diagnostics: [warning])) =
+    yaml.parse_node_with_diagnostics("name: one\nname: two\n")
+
+  assert node.get(document, [node.Key("name")]) |> option.is_some()
+  assert warning
+    == diagnostic.DuplicateMappingKey(
+      key: "name",
+      duplicate: node.Span(start: node.Position(2, 1), end: node.Position(2, 6)),
+      original: node.Span(start: node.Position(1, 1), end: node.Position(1, 6)),
+    )
+  assert diagnostic.severity(warning) == diagnostic.Warning
+  assert diagnostic.message(warning) == "Duplicate mapping key `name`"
+  assert diagnostic.related(warning)
+    == [
+      diagnostic.FirstMappingKey(span: node.Span(
+        start: node.Position(1, 1),
+        end: node.Position(1, 6),
+      )),
+    ]
+}
+
+pub fn diagnostics_collects_nested_duplicate_keys_test() {
+  let assert Ok(yaml.Parsed(diagnostics: [warning], ..)) =
+    yaml.parse_node_with_diagnostics("job:\n  script: one\n  script: two\n")
+
+  assert warning
+    == diagnostic.DuplicateMappingKey(
+      key: "script",
+      duplicate: node.Span(
+        start: node.Position(3, 3),
+        end: node.Position(3, 10),
+      ),
+      original: node.Span(start: node.Position(2, 3), end: node.Position(2, 10)),
+    )
 }

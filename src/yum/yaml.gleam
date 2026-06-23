@@ -22,6 +22,7 @@ import gleam/list
 import gleam/result
 import gleam/string
 import yum/yaml/ast.{type Yaml, type YamlAST}
+import yum/yaml/diagnostic.{type Diagnostic}
 import yum/yaml/dynamic as yaml_dynamic
 import yum/yaml/emitter
 import yum/yaml/error.{type YamlError}
@@ -32,6 +33,12 @@ import yum/yaml/parser
 pub type DecodeError {
   ParseError(YamlError)
   UnableToDecode(List(dynamic_decode.DecodeError))
+}
+
+/// A parsed value with non-fatal diagnostics collected from it.
+///
+pub type Parsed(a) {
+  Parsed(value: a, diagnostics: List(Diagnostic))
 }
 
 /// Parses a YAML file into a YAML document.
@@ -84,6 +91,17 @@ pub fn parse_node(input: String) -> Result(YamlNode, YamlError) {
   }
 }
 
+/// Parses a YAML file into an opaque node and non-fatal diagnostics.
+///
+pub fn parse_node_with_diagnostics(
+  input: String,
+) -> Result(Parsed(YamlNode), YamlError) {
+  use document <- result.try(parse_node(input))
+
+  Parsed(value: document, diagnostics: diagnostic.collect(document))
+  |> Ok
+}
+
 /// Parses a YAML stream into opaque tooling nodes.
 ///
 pub fn parse_node_stream(input: String) -> Result(List(YamlNode), YamlError) {
@@ -93,6 +111,20 @@ pub fn parse_node_stream(input: String) -> Result(List(YamlNode), YamlError) {
   use tokens <- result.try(lexer.lex(input))
   use parsed <- result.try(parser.parse_stream(tokens))
   Ok(parsed)
+}
+
+/// Parses a YAML stream into opaque nodes and non-fatal diagnostics.
+///
+pub fn parse_node_stream_with_diagnostics(
+  input: String,
+) -> Result(Parsed(List(YamlNode)), YamlError) {
+  use documents <- result.try(parse_node_stream(input))
+
+  Parsed(
+    value: documents,
+    diagnostics: list.flat_map(documents, diagnostic.collect),
+  )
+  |> Ok
 }
 
 /// Converts a span-aware YAML node to Gleam dynamic data for use with decoders.
