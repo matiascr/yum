@@ -10,19 +10,29 @@
 ////
 //// Use [`parse`](#parse) when you want a single YAML document value, including
 //// document-level metadata such as directives. Use [`parse_stream`](#parse_stream) for
-//// YAML streams containing zero or more explicit documents. Use [`parse_ast`](#parse_ast)
-//// and [`parse_ast_stream`](#parse_ast_stream) when you only need parsed node trees.
+//// YAML streams containing zero or more explicit documents. Use [`parse_node`](#parse_node)
+//// and [`parse_node_stream`](#parse_node_stream) when you want an opaque node API.
 ////
 
 import gleam/bool
+import gleam/dynamic.{type Dynamic}
+import gleam/dynamic/decode as dynamic_decode
 import gleam/int
 import gleam/list
 import gleam/result
 import gleam/string
 import yum/yaml/ast.{type Yaml, type YamlAST}
+import yum/yaml/dynamic as yaml_dynamic
+import yum/yaml/emitter
 import yum/yaml/error.{type YamlError}
 import yum/yaml/lexer
+import yum/yaml/node
 import yum/yaml/parser
+
+pub type DecodeError {
+  ParseError(YamlError)
+  UnableToDecode(List(dynamic_decode.DecodeError))
+}
 
 /// Parses a YAML file into a YAML document.
 ///
@@ -63,6 +73,58 @@ pub fn parse_ast_stream(input: String) -> Result(List(YamlAST), YamlError) {
   use tokens <- result.try(lexer.lex(input))
   use parsed <- result.try(parser.parse_stream(tokens))
   Ok(parsed)
+}
+
+/// Parses a YAML file into an opaque tooling node for its document contents.
+///
+pub fn parse_node(input: String) -> Result(node.YamlNode, YamlError) {
+  input
+  |> parse_ast()
+  |> result.map(node.from_ast)
+}
+
+/// Parses a YAML stream into opaque tooling nodes.
+///
+pub fn parse_node_stream(
+  input: String,
+) -> Result(List(node.YamlNode), YamlError) {
+  input
+  |> parse_ast_stream()
+  |> result.map(list.map(_, node.from_ast))
+}
+
+/// Converts a span-aware YAML node to Gleam dynamic data for use with decoders.
+///
+pub fn to_dynamic(node: node.YamlNode) -> Dynamic {
+  yaml_dynamic.from_node(node)
+}
+
+/// Converts a simple YAML AST value to Gleam dynamic data for use with decoders.
+///
+pub fn ast_to_dynamic(ast: YamlAST) -> Dynamic {
+  yaml_dynamic.from_ast(ast)
+}
+
+/// Parses YAML and decodes it using a `gleam/dynamic/decode` decoder.
+///
+pub fn decode(
+  from input: String,
+  using decoder: dynamic_decode.Decoder(t),
+) -> Result(t, DecodeError) {
+  use node <- result.try(parse_node(input) |> result.map_error(ParseError))
+
+  node
+  |> to_dynamic
+  |> dynamic_decode.run(decoder)
+  |> result.map_error(UnableToDecode)
+}
+
+/// Emits a deterministic YAML string from a YAML node and validates the output.
+///
+pub fn to_string(node: node.YamlNode) -> Result(String, YamlError) {
+  let rendered = emitter.to_string(node)
+  use _ <- result.try(parse_ast(rendered))
+  Ok(rendered)
 }
 
 /// Normalizes whitespace in the YAML file.
