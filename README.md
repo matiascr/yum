@@ -96,6 +96,36 @@ pub fn diagnostics() {
 
 Further documentation can be found at <https://hexdocs.pm/yum>.
 
+## YAML support
+
+`yum` targets YAML 1.2-style configuration files with a tooling-oriented API.
+It currently supports:
+
+- block and flow sequences and mappings
+- plain, single-quoted, double-quoted, literal block, and folded block scalars
+- document streams with `---` and `...` markers
+- comments in parsed input
+- anchors, aliases, local tags, verbatim tags, and `%TAG` directives
+- merge keys (`<<`) as a pragmatic compatibility feature
+- spans, styles, typed diagnostics, decoding, building, and deterministic
+  emission
+
+The semantic resolver is intentionally separate from syntax parsing:
+
+```gleam
+input
+|> yaml.parse()
+|> result.then(yaml.resolve)
+// -> Ok(Yaml(...))
+```
+
+Known limitations before a full compliance claim:
+
+- `%YAML` directives are parsed but not yet fully validated.
+- Tags are expanded, but not every YAML tag URI edge case is validated.
+- Comments are accepted in input, but not preserved for round-trip editing.
+- `yum` does not yet expose selectable schemas such as failsafe, JSON, or core.
+
 ## Development
 
 ```sh
