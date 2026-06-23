@@ -32,7 +32,7 @@ pub fn load_node_parses_and_resolves_test() {
     |> resolved.root
     |> node.get([node.Key("job"), node.Key("script")])
 
-  assert node.as_string(script) == option.Some("test")
+  assert node.as_string(script) == Ok("test")
 }
 
 pub fn load_node_stream_resolves_each_document_test() {
@@ -94,7 +94,7 @@ pub fn parse_node_tracks_anchor_and_alias_metadata_test() {
   let assert option.Some(copy) = node.get(document, [node.Key("copy")])
 
   assert node.anchor(base) == option.Some("base")
-  assert node.as_string(base) == option.Some("value")
+  assert node.as_string(base) == Ok("value")
   assert node.alias(copy) == option.Some("base")
 }
 
@@ -122,4 +122,37 @@ pub fn parse_node_tracks_flow_aliases_test() {
 
   assert node.anchor(base) == option.Some("base")
   assert node.alias(copy) == option.Some("base")
+}
+
+pub fn parse_node_tracks_local_tag_metadata_test() {
+  let assert Ok(document) = yaml.parse_node("value: !Thing hello\n")
+  let assert option.Some(value) = node.get(document, [node.Key("value")])
+
+  assert node.tag(value) == option.Some("Thing")
+  assert node.as_string(value) == Ok("hello")
+}
+
+pub fn parse_node_tracks_core_tag_metadata_test() {
+  let assert Ok(document) = yaml.parse_node("value: !!str 123\n")
+  let assert option.Some(value) = node.get(document, [node.Key("value")])
+
+  assert node.tag(value) == option.Some("!str")
+  assert node.as_int(value) == Ok(123)
+}
+
+pub fn parse_node_tracks_verbatim_tag_metadata_test() {
+  let assert Ok(document) =
+    yaml.parse_node("value: !<tag:example.com,2026:thing> hello\n")
+  let assert option.Some(value) = node.get(document, [node.Key("value")])
+
+  assert node.tag(value) == option.Some("<tag:example.com,2026:thing>")
+  assert node.as_string(value) == Ok("hello")
+}
+
+pub fn parse_node_tracks_tag_and_anchor_metadata_test() {
+  let assert Ok(document) = yaml.parse_node("value: !Thing &base hello\n")
+  let assert option.Some(value) = node.get(document, [node.Key("value")])
+
+  assert node.tag(value) == option.Some("Thing")
+  assert node.anchor(value) == option.Some("base")
 }

@@ -11,8 +11,8 @@ pub fn parse_node_exposes_kind_and_accessors_test() {
   let assert node.Mapping(entries) = node.kind(document)
   let assert [#(key, value)] = entries
 
-  assert node.as_string(key) == option.Some("name")
-  assert node.as_string(value) == option.Some("yum")
+  assert node.as_string(key) == Ok("name")
+  assert node.as_string(value) == Ok("yum")
   assert node.style(document) == node.BlockMapping
   assert node.style(key) == node.PlainScalar
   assert node.style(value) == node.DoubleQuotedScalar
@@ -29,7 +29,7 @@ pub fn get_retrieves_nested_mapping_values_test() {
     ])
   let assert option.Some(command) = node.get(script, [node.Index(0)])
 
-  assert node.as_string(command) == option.Some("gleam")
+  assert node.as_string(command) == Ok("gleam")
 }
 
 pub fn parse_node_tracks_flow_collection_style_and_span_test() {
@@ -96,6 +96,38 @@ pub fn get_index_rejects_negative_indexes_test() {
     ])
 
   assert node.get_index(document, -1) == option.None
+}
+
+pub fn as_accessors_return_values_test() {
+  let assert Ok(document) =
+    yaml.parse_node(
+      "name: yum\ncount: 1\nactive: true\nratio: 1.5\nempty: null\n",
+    )
+  let assert option.Some(name) = node.get(document, [node.Key("name")])
+  let assert option.Some(count) = node.get(document, [node.Key("count")])
+  let assert option.Some(active) = node.get(document, [node.Key("active")])
+  let assert option.Some(ratio) = node.get(document, [node.Key("ratio")])
+  let assert option.Some(empty) = node.get(document, [node.Key("empty")])
+
+  assert node.as_mapping(document) |> result.is_ok()
+  assert node.as_string(name) == Ok("yum")
+  assert node.as_int(count) == Ok(1)
+  assert node.as_bool(active) == Ok(True)
+  assert node.as_float(ratio) == Ok(1.5)
+  assert node.as_null(empty) == Ok(Nil)
+}
+
+pub fn as_accessors_return_typed_errors_test() {
+  let assert Ok(document) = yaml.parse_node("count: 1\n")
+  let assert option.Some(count) = node.get(document, [node.Key("count")])
+
+  assert node.kind_name(count) == node.IntKind
+  assert node.as_string(count)
+    == Error(node.ExpectedKind(
+      expected: node.StringKind,
+      found: node.IntKind,
+      span: node.Span(start: node.Position(1, 8), end: node.Position(1, 9)),
+    ))
 }
 
 pub fn parse_node_with_diagnostics_warns_for_duplicate_keys_test() {

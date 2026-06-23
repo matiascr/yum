@@ -32,6 +32,30 @@ pub type YamlKind {
   Mapping(List(#(YamlNode, YamlNode)))
 }
 
+/// A lightweight name for a YAML node kind.
+///
+/// This is useful in diagnostics and access errors where carrying the full node
+/// value would be noisy.
+pub type KindName {
+  NullKind
+  BoolKind
+  IntKind
+  FloatKind
+  PosInfKind
+  NegInfKind
+  NanKind
+  StringKind
+  SequenceKind
+  MappingKind
+}
+
+/// An error returned by strict node accessors.
+///
+pub type AccessError {
+  /// The node had a different kind than the accessor required.
+  ExpectedKind(expected: KindName, found: KindName, span: Span)
+}
+
 pub type YamlStyle {
   PlainScalar
   SingleQuotedScalar
@@ -91,6 +115,13 @@ pub fn kind(node: YamlNode) -> YamlKind {
   node.kind
 }
 
+/// Returns the node kind without its associated value.
+///
+pub fn kind_name(node: YamlNode) -> KindName {
+  node.kind
+  |> kind_name_of
+}
+
 pub fn span(node: YamlNode) -> Span {
   node.span
 }
@@ -129,45 +160,54 @@ pub fn with_alias(node: YamlNode, alias: String) -> YamlNode {
   YamlNode(..node, alias: Some(alias))
 }
 
-pub fn as_mapping(node: YamlNode) -> Option(List(#(YamlNode, YamlNode))) {
+pub fn as_mapping(
+  node: YamlNode,
+) -> Result(List(#(YamlNode, YamlNode)), AccessError) {
   case node.kind {
-    Mapping(entries) -> Some(entries)
-    _ -> None
+    Mapping(entries) -> Ok(entries)
+    _ -> Error(expected(node, to_be: MappingKind))
   }
 }
 
-pub fn as_sequence(node: YamlNode) -> Option(List(YamlNode)) {
+pub fn as_sequence(node: YamlNode) -> Result(List(YamlNode), AccessError) {
   case node.kind {
-    Sequence(entries) -> Some(entries)
-    _ -> None
+    Sequence(entries) -> Ok(entries)
+    _ -> Error(expected(node, to_be: SequenceKind))
   }
 }
 
-pub fn as_string(node: YamlNode) -> Option(String) {
+pub fn as_string(node: YamlNode) -> Result(String, AccessError) {
   case node.kind {
-    String(value) -> Some(value)
-    _ -> None
+    String(value) -> Ok(value)
+    _ -> Error(expected(node, to_be: StringKind))
   }
 }
 
-pub fn as_bool(node: YamlNode) -> Option(Bool) {
+pub fn as_bool(node: YamlNode) -> Result(Bool, AccessError) {
   case node.kind {
-    Bool(value) -> Some(value)
-    _ -> None
+    Bool(value) -> Ok(value)
+    _ -> Error(expected(node, to_be: BoolKind))
   }
 }
 
-pub fn as_int(node: YamlNode) -> Option(Int) {
+pub fn as_int(node: YamlNode) -> Result(Int, AccessError) {
   case node.kind {
-    Int(value) -> Some(value)
-    _ -> None
+    Int(value) -> Ok(value)
+    _ -> Error(expected(node, to_be: IntKind))
   }
 }
 
-pub fn as_float(node: YamlNode) -> Option(Float) {
+pub fn as_float(node: YamlNode) -> Result(Float, AccessError) {
   case node.kind {
-    Float(value) -> Some(value)
-    _ -> None
+    Float(value) -> Ok(value)
+    _ -> Error(expected(node, to_be: FloatKind))
+  }
+}
+
+pub fn as_null(node: YamlNode) -> Result(Nil, AccessError) {
+  case node.kind {
+    Null -> Ok(Nil)
+    _ -> Error(expected(node, to_be: NullKind))
   }
 }
 
@@ -184,28 +224,33 @@ pub fn get(node: YamlNode, path: List(PathSegment)) -> Option(YamlNode) {
 }
 
 pub fn get_key(node: YamlNode, key: String) -> Option(YamlNode) {
-  use entries <- option.then(as_mapping(node))
-
-  entries
-  |> list.find_map(fn(entry) {
-    let #(entry_key, value) = entry
-    case as_string(entry_key) {
-      Some(entry_key) if entry_key == key -> Ok(value)
-      _ -> Error(Nil)
-    }
-  })
-  |> option.from_result()
+  case as_mapping(node) {
+    Ok(entries) ->
+      entries
+      |> list.find_map(fn(entry) {
+        let #(entry_key, value) = entry
+        case as_string(entry_key) {
+          Ok(entry_key) if entry_key == key -> Ok(value)
+          _ -> Error(Nil)
+        }
+      })
+      |> option.from_result()
+    Error(_) -> None
+  }
 }
 
 pub fn get_index(node: YamlNode, index: Int) -> Option(YamlNode) {
   case index < 0 {
     True -> None
     False -> {
-      use entries <- option.then(as_sequence(node))
-      entries
-      |> list.drop(index)
-      |> list.first()
-      |> option.from_result()
+      case as_sequence(node) {
+        Ok(entries) ->
+          entries
+          |> list.drop(index)
+          |> list.first()
+          |> option.from_result()
+        Error(_) -> None
+      }
     }
   }
 }
@@ -250,5 +295,24 @@ pub fn from_ast(value: YamlAST) -> YamlNode {
       })
       |> Mapping
       |> synthetic()
+  }
+}
+
+fn expected(node: YamlNode, to_be kind: KindName) -> AccessError {
+  ExpectedKind(expected: kind, found: kind_name(node), span: node.span)
+}
+
+fn kind_name_of(kind: YamlKind) -> KindName {
+  case kind {
+    Null -> NullKind
+    Bool(_) -> BoolKind
+    Int(_) -> IntKind
+    Float(_) -> FloatKind
+    PosInf -> PosInfKind
+    NegInf -> NegInfKind
+    Nan -> NanKind
+    String(_) -> StringKind
+    Sequence(_) -> SequenceKind
+    Mapping(_) -> MappingKind
   }
 }

@@ -83,6 +83,7 @@ pub type Token {
   PlainScalar(value: String)
   Anchor(value: String)
   Alias(value: String)
+  Tag(value: String)
   BlockScalarHeader(style: BlockScalarStyle, chomp: Chomp, parent_indent: Int)
   BlockScalarLine(indent: Int, content: String)
   Escape(value: String)

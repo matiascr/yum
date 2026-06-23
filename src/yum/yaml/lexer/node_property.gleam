@@ -3,13 +3,11 @@ import gleam/string
 import yum/yaml/token.{type Token}
 
 pub fn token(lexeme: String) -> Option(Token) {
-  case string.starts_with(lexeme, "&"), name(lexeme) {
-    True, Some(anchor) -> Some(token.Anchor(anchor))
-    _, _ ->
-      case string.starts_with(lexeme, "*"), name(lexeme) {
-        True, Some(alias) -> Some(token.Alias(alias))
-        _, _ -> None
-      }
+  case lexeme, name(lexeme) {
+    "&" <> _, Some(anchor) -> Some(token.Anchor(anchor))
+    "*" <> _, Some(alias) -> Some(token.Alias(alias))
+    "!" <> _, Some(tag) -> Some(token.Tag(tag))
+    _, _ -> None
   }
 }
 
