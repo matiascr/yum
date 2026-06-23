@@ -22,6 +22,9 @@ pub type Severity {
 pub type Related {
   /// The first occurrence of a duplicate mapping key.
   FirstMappingKey(span: Span)
+
+  /// The first occurrence of a duplicate YAML directive.
+  FirstYamlDirective(span: Span)
 }
 
 pub type Diagnostic {
@@ -37,6 +40,15 @@ pub type Diagnostic {
 
   /// A TAG directive is malformed.
   InvalidTagDirective(span: Span)
+
+  /// A YAML directive is malformed.
+  InvalidYamlDirective(span: Span)
+
+  /// A YAML directive declares a version this package does not support.
+  UnsupportedYamlVersion(version: String, span: Span)
+
+  /// A document contains more than one YAML directive.
+  DuplicateYamlDirective(duplicate: Span, original: Span)
 
   /// A node tag uses a handle that has not been declared for the document.
   UnknownTagHandle(handle: String, span: Span)
@@ -176,6 +188,9 @@ pub fn severity(diagnostic: Diagnostic) -> Severity {
     DuplicateMappingKey(..) -> Warning
     UnknownAlias(..) -> DiagnosticError
     InvalidTagDirective(..) -> DiagnosticError
+    InvalidYamlDirective(..) -> DiagnosticError
+    UnsupportedYamlVersion(..) -> DiagnosticError
+    DuplicateYamlDirective(..) -> DiagnosticError
     UnknownTagHandle(..) -> DiagnosticError
     InvalidMergeTarget(..) -> DiagnosticError
   }
@@ -215,6 +230,10 @@ pub fn message(diagnostic: Diagnostic) -> String {
     DuplicateMappingKey(key:, ..) -> "Duplicate mapping key `" <> key <> "`"
     UnknownAlias(alias:, ..) -> "Unknown alias `" <> alias <> "`"
     InvalidTagDirective(..) -> "Invalid %TAG directive"
+    InvalidYamlDirective(..) -> "Invalid %YAML directive"
+    UnsupportedYamlVersion(version:, ..) ->
+      "Unsupported YAML version `" <> version <> "`"
+    DuplicateYamlDirective(..) -> "Duplicate %YAML directive"
     UnknownTagHandle(handle:, ..) -> "Unknown tag handle `" <> handle <> "`"
     InvalidMergeTarget(..) -> "Merge key must reference a mapping"
   }
@@ -227,6 +246,9 @@ pub fn span(diagnostic: Diagnostic) -> Span {
     DuplicateMappingKey(duplicate:, ..) -> duplicate
     UnknownAlias(span:, ..) -> span
     InvalidTagDirective(span:) -> span
+    InvalidYamlDirective(span:) -> span
+    UnsupportedYamlVersion(span:, ..) -> span
+    DuplicateYamlDirective(duplicate:, ..) -> duplicate
     UnknownTagHandle(span:, ..) -> span
     InvalidMergeTarget(span:, ..) -> span
   }
@@ -237,8 +259,13 @@ pub fn span(diagnostic: Diagnostic) -> Span {
 pub fn related(diagnostic: Diagnostic) -> List(Related) {
   case diagnostic {
     DuplicateMappingKey(original:, ..) -> [FirstMappingKey(span: original)]
+    DuplicateYamlDirective(original:, ..) -> [
+      FirstYamlDirective(span: original),
+    ]
     UnknownAlias(..) -> []
     InvalidTagDirective(..) -> []
+    InvalidYamlDirective(..) -> []
+    UnsupportedYamlVersion(..) -> []
     UnknownTagHandle(..) -> []
     InvalidMergeTarget(..) -> []
   }
@@ -249,6 +276,7 @@ pub fn related(diagnostic: Diagnostic) -> List(Related) {
 pub fn related_message(related: Related) -> String {
   case related {
     FirstMappingKey(..) -> "First key appears here"
+    FirstYamlDirective(..) -> "First %YAML directive appears here"
   }
 }
 
@@ -257,6 +285,7 @@ pub fn related_message(related: Related) -> String {
 pub fn related_span(related: Related) -> Span {
   case related {
     FirstMappingKey(span:) -> span
+    FirstYamlDirective(span:) -> span
   }
 }
 

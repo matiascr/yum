@@ -121,7 +121,6 @@ input
 
 Known limitations before a full compliance claim:
 
-- `%YAML` directives are parsed but not yet fully validated.
 - Tags are expanded, but not every YAML tag URI edge case is validated.
 - Comments are accepted in input, but not preserved for round-trip editing.
 - `yum` does not yet expose selectable schemas such as failsafe, JSON, or core.

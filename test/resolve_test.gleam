@@ -140,6 +140,56 @@ pub fn resolve_rejects_invalid_tag_directives_test() {
   assert diagnostic.message(error) == "Invalid %TAG directive"
 }
 
+pub fn resolve_accepts_yaml_1_2_directives_test() {
+  let assert Ok(document) = yaml.parse("%YAML 1.2\n---\nvalue\n")
+  let assert Ok(document) = yaml.resolve(document)
+
+  assert yaml.diagnostics(document) == []
+}
+
+pub fn resolve_rejects_invalid_yaml_directives_test() {
+  let assert Ok(document) = yaml.parse("%YAML\n---\nvalue\n")
+  let assert [directive] = yaml.directives(document)
+  let yaml.Directive(span:, ..) = directive
+
+  let assert Error([error]) = yaml.resolve(document)
+
+  assert error == diagnostic.InvalidYamlDirective(span:)
+  assert diagnostic.severity(error) == diagnostic.DiagnosticError
+  assert diagnostic.message(error) == "Invalid %YAML directive"
+}
+
+pub fn resolve_rejects_unsupported_yaml_versions_test() {
+  let assert Ok(document) = yaml.parse("%YAML 1.1\n---\nvalue\n")
+  let assert [directive] = yaml.directives(document)
+  let yaml.Directive(span:, ..) = directive
+
+  let assert Error([error]) = yaml.resolve(document)
+
+  assert error == diagnostic.UnsupportedYamlVersion(version: "1.1", span:)
+  assert diagnostic.severity(error) == diagnostic.DiagnosticError
+  assert diagnostic.message(error) == "Unsupported YAML version `1.1`"
+}
+
+pub fn resolve_rejects_duplicate_yaml_directives_test() {
+  let assert Ok(document) = yaml.parse("%YAML 1.2\n%YAML 1.2\n---\nvalue\n")
+  let assert [first, second] = yaml.directives(document)
+  let yaml.Directive(span: first_span, ..) = first
+  let yaml.Directive(span: second_span, ..) = second
+
+  let assert Error([error]) = yaml.resolve(document)
+
+  assert error
+    == diagnostic.DuplicateYamlDirective(
+      duplicate: second_span,
+      original: first_span,
+    )
+  assert diagnostic.severity(error) == diagnostic.DiagnosticError
+  assert diagnostic.message(error) == "Duplicate %YAML directive"
+  assert diagnostic.related(error)
+    == [diagnostic.FirstYamlDirective(span: first_span)]
+}
+
 pub fn diagnostic_helpers_split_warnings_and_errors_test() {
   let assert Ok(document) = yaml.parse("name: one\nname: two\n")
   let assert Ok(resolved_document) = yaml.resolve(document)

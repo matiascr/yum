@@ -101,7 +101,7 @@ fn document_parser() -> Parser(Document, Token, Context) {
 }
 
 fn explicit_document_parser() -> Parser(Document, Token, Context) {
-  use directives <- do(nibble.many(directive_parser()))
+  use directives <- do(nibble.many(directive_line_parser()))
   use _ <- do(indentation_gap_parser())
   use _ <- do(nibble.token(token.DocumentStart))
   use document_start_span <- do(nibble.span())
@@ -113,6 +113,13 @@ fn explicit_document_parser() -> Parser(Document, Token, Context) {
 
   document.new(root:, directives:)
   |> return
+}
+
+fn directive_line_parser() -> Parser(document.Directive, Token, Context) {
+  use directive <- do(directive_parser())
+  use _ <- do(indentation_gap_parser())
+
+  return(directive)
 }
 
 fn bare_document_parser() -> Parser(Document, Token, Context) {

@@ -26,6 +26,10 @@ pub fn resolve(
   root: Node,
   directives: List(document.Directive),
 ) -> Result(#(Node, List(Diagnostic)), List(Diagnostic)) {
+  let yaml_directive_diagnostics =
+    directives
+    |> validate_yaml_directives()
+
   let #(tag_handles, directive_diagnostics) =
     directives
     |> tag_handles()
@@ -39,6 +43,7 @@ pub fn resolve(
 
   let diagnostics =
     []
+    |> list.append(yaml_directive_diagnostics)
     |> list.append(directive_diagnostics)
     |> list.append(tag_diagnostics)
     |> list.append(property_diagnostics)
@@ -48,6 +53,50 @@ pub fn resolve(
     True -> Error(diagnostics)
     False -> Ok(#(root, diagnostics))
   }
+}
+
+fn validate_yaml_directives(
+  directives: List(document.Directive),
+) -> List(Diagnostic) {
+  let #(_, diagnostics) =
+    list.fold(directives, #(None, []), fn(acc, directive) {
+      let #(first_yaml, diagnostics) = acc
+
+      case directive {
+        document.Directive(name: "YAML", parameters: [version], span:) ->
+          case first_yaml {
+            Some(original) -> #(
+              first_yaml,
+              list.append(diagnostics, [
+                diagnostic.DuplicateYamlDirective(
+                  duplicate: span,
+                  original: original,
+                ),
+              ]),
+            )
+
+            None ->
+              case version {
+                "1.2" -> #(Some(span), diagnostics)
+                _ -> #(
+                  Some(span),
+                  list.append(diagnostics, [
+                    diagnostic.UnsupportedYamlVersion(version:, span:),
+                  ]),
+                )
+              }
+          }
+
+        document.Directive(name: "YAML", span:, ..) -> #(
+          first_yaml,
+          list.append(diagnostics, [diagnostic.InvalidYamlDirective(span:)]),
+        )
+
+        _ -> acc
+      }
+    })
+
+  diagnostics
 }
 
 fn tag_handles(
