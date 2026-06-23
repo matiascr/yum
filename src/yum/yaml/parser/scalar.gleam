@@ -107,7 +107,7 @@ fn parse_hexadecimal(input: String) -> Option(node.Kind) {
 }
 
 fn parse_float(input: String) -> Option(node.Kind) {
-  case string.contains(input, "."), has_decimal_digit(input) {
+  case looks_like_float(input), has_decimal_digit(input) {
     True, True ->
       input
       |> parse_float_value()
@@ -117,10 +117,26 @@ fn parse_float(input: String) -> Option(node.Kind) {
   }
 }
 
+fn looks_like_float(input: String) -> Bool {
+  string.contains(input, ".")
+  || string.contains(input, "e")
+  || string.contains(input, "E")
+}
+
 fn parse_float_value(input: String) -> Result(Float, Nil) {
   case input {
-    "+" <> unsigned -> float.parse(unsigned)
-    _ -> float.parse(input)
+    "+" <> unsigned -> unsigned |> normalize_exponent_float() |> float.parse()
+    _ -> input |> normalize_exponent_float() |> float.parse()
+  }
+}
+
+fn normalize_exponent_float(input: String) -> String {
+  case string.contains(input, ".") {
+    True -> input
+    False ->
+      input
+      |> string.replace(each: "e", with: ".0e")
+      |> string.replace(each: "E", with: ".0E")
   }
 }
 

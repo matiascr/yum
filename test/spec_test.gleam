@@ -290,6 +290,18 @@ pub fn example_2_20_floating_point_test() {
     |> Ok
 }
 
+pub fn exponent_only_floating_point_scalars_test() {
+  let input = "positive: 1e3\nsigned: +1e3\nnegative: -1E3"
+
+  assert helpers.parse_ast(input)
+    == Mapping([
+      #(String("positive"), Float(1000.0)),
+      #(String("signed"), Float(1000.0)),
+      #(String("negative"), Float(-1000.0)),
+    ])
+    |> Ok
+}
+
 pub fn example_2_21_miscellaneous_test() {
   let input = "null:\nbooleans: [ true, false ]\nstring: '012345'"
 
