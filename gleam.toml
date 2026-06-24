@@ -1,6 +1,6 @@
 name = "yum"
 version = "1.0.0"
-description = "Tooling-grade YAML parsing, diagnostics, decoding, and emitting for Gleam."
+description = "Tooling-grade YAML parsing, diagnostics, decoding, and emitting for Gleam on Erlang and JavaScript."
 licences = ["Apache-2.0"]
 repository = { type = "github", user = "matiascr", repo = "yum" }
 links = [
