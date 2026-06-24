@@ -1,8 +1,5 @@
 # yum
 
-[![Package Version](https://img.shields.io/hexpm/v/yum)](https://hex.pm/packages/yum)
-[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/yum/)
-
 ```sh
 gleam add yum@1
 ```
@@ -15,10 +12,8 @@ pub fn parse_yaml(input: String) {
 }
 ```
 
-[`yaml.parse`](https://hexdocs.pm/yum/yum/yaml.html#parse) returns an opaque
-YAML document. You can inspect it directly or pipe it through
-[`yaml.resolve`](https://hexdocs.pm/yum/yum/yaml.html#resolve) to run semantic
-YAML checks:
+`yaml.parse` returns an opaque YAML document. You can inspect it directly or
+pipe it through `yaml.resolve` to run semantic YAML checks:
 
 ```gleam
 import gleam/option.{type Option, None}
@@ -42,10 +37,8 @@ pub fn check(input: String) {
 }
 ```
 
-YAML can also be decoded with
-[`gleam/dynamic/decode`](https://hexdocs.pm/gleam_stdlib/gleam/dynamic/decode.html),
-or built and emitted with
-[`yum/yaml/builder`](https://hexdocs.pm/yum/yum/yaml/builder.html):
+YAML can also be decoded with `gleam/dynamic/decode`, or built and emitted with
+`yum/yaml/builder`:
 
 ```gleam
 import gleam/dynamic/decode
@@ -94,23 +87,18 @@ pub fn diagnostics() {
 }
 ```
 
-Further documentation can be found at <https://hexdocs.pm/yum>.
+Further documentation can be found on HexDocs after publishing.
 
 ## Public API
 
 The stable 1.0 API is intentionally small:
 
-- [`yum/yaml`](https://hexdocs.pm/yum/yum/yaml.html) parses, resolves, queries,
-  decodes, and emits YAML documents.
-- [`yum/yaml/node`](https://hexdocs.pm/yum/yum/yaml/node.html) inspects YAML
-  nodes, including kind, span, style, tags, anchors, aliases, paths, mapping
-  keys, and mapping values.
-- [`yum/yaml/builder`](https://hexdocs.pm/yum/yum/yaml/builder.html) builds
-  synthetic YAML node trees in Gleam code.
-- [`yum/yaml/diagnostic`](https://hexdocs.pm/yum/yum/yaml/diagnostic.html)
-  exposes typed resolver diagnostics.
-- [`yum/yaml/error`](https://hexdocs.pm/yum/yum/yaml/error.html) exposes parse
-  errors, messages, and source spans.
+- `yum/yaml` parses, resolves, queries, decodes, and emits YAML documents.
+- `yum/yaml/node` inspects YAML nodes, including kind, span, style, tags,
+  anchors, aliases, paths, mapping keys, and mapping values.
+- `yum/yaml/builder` builds synthetic YAML node trees in Gleam code.
+- `yum/yaml/diagnostic` exposes typed resolver diagnostics.
+- `yum/yaml/error` exposes parse errors, messages, and source spans.
 
 Lexer, parser, resolver, emitter, token, dynamic, and document internals are not
 part of the public API.
