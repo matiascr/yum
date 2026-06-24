@@ -1,4 +1,37 @@
-//// Builders for YAML nodes.
+//// Build YAML nodes in Gleam code.
+////
+//// The functions in this module create synthetic [`Node`](./node.html#Node)
+//// values. Pass the root node to [`yum/yaml.from_node`](../yaml.html#from_node)
+//// when you want to emit it as YAML or use it with the rest of the public YAML
+//// API.
+////
+//// ```gleam
+//// import yum/yaml
+//// import yum/yaml/builder
+////
+//// pub fn example() {
+////   let document =
+////     builder.mapping([
+////       #(builder.string("name"), builder.string("yum")),
+////       #(
+////         builder.string("commands"),
+////         builder.sequence([
+////           builder.string("gleam test"),
+////           builder.string("gleam format"),
+////         ]),
+////       ),
+////     ])
+////     |> yaml.from_node()
+////
+////   let output = yaml.to_string(document)
+////
+////   assert output ==
+//// "name: yum
+//// commands:
+////   - gleam test
+////   - gleam format"
+//// }
+//// ```
 
 import yum/yaml/node.{type Node}
 

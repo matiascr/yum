@@ -1,11 +1,24 @@
-//// Span-aware YAML node model.
+//// Inspect and query YAML nodes.
 ////
-//// This module exposes a small accessor-driven API for tooling use. The node
-//// internals are opaque so future parser work can add comments, anchors, tags,
-//// and richer trivia without forcing callers to change their code.
+//// A [`Node`](#Node) is one value inside a YAML document: a scalar, sequence,
+//// or mapping. This module provides accessors for the node kind, source span,
+//// source style, tags, anchors, aliases, typed scalar values, and nested path
+//// lookup.
+////
+//// Nodes are used by both raw and resolved YAML documents. Parsing creates
+//// nodes with the structure and metadata found in the source. Resolving
+//// validates YAML-level metadata such as aliases and tags, and may expand or
+//// compose parts of the tree, but a resolved document still contains nodes.
+////
+//// For example, [`tag`](#tag), [`anchor`](#anchor), and [`alias`](#alias)
+//// expose YAML metadata attached to a node. That metadata is not the same as
+//// the node's semantic [`Kind`](#Kind). Nodes created with
+//// [`yum/yaml/builder`](./builder.html) are synthetic and use
+//// [`synthetic_span`](#synthetic_span).
 
 import gleam/list
 import gleam/option.{type Option, None, Some}
+import gleam/result
 
 pub opaque type Node {
   Node(
@@ -249,6 +262,10 @@ pub fn synthetic_span() -> Span {
   Span(start: Position(0, 0), end: Position(0, 0))
 }
 
+/// Returns the semantic kind and value of a node.
+///
+/// This is the broadest accessor. Prefer the stricter `as_*` functions when a
+/// caller expects one specific YAML kind and wants a typed error for mismatches.
 pub fn kind(node: Node) -> Kind {
   node.kind
 }
@@ -260,27 +277,74 @@ pub fn kind_name(node: Node) -> KindName {
   |> kind_name_of
 }
 
+/// Returns the source span for a node.
+///
+/// Parsed nodes use 1-based row and column positions. Synthetic nodes created
+/// with [`yum/yaml/builder`](./builder.html) use [`synthetic_span`](#synthetic_span).
 pub fn span(node: Node) -> Span {
   node.span
 }
 
+/// Returns the source style used to write a node.
+///
+/// Style describes presentation, such as plain versus quoted scalars or block
+/// versus flow collections. It does not change the node's semantic kind.
 pub fn style(node: Node) -> Style {
   node.style
 }
 
+/// Returns the YAML tag attached to a node, if one was written or added.
+///
+/// Tags are metadata, not value casts. A tagged scalar keeps its parsed
+/// [`Kind`](#Kind); for example `!!str 123` is still parsed as an integer today,
+/// while the tag is available through this function.
+///
+/// On raw YAML, this returns the tag form captured by the parser. On resolved
+/// YAML, tag handles are expanded where possible. For example:
+///
+/// ```gleam
+/// import gleam/option
+/// import yum/yaml
+/// import yum/yaml/node
+///
+/// pub fn example() {
+///   let assert Ok(document) = yaml.parse("value: !!str 123")
+///   let assert option.Some(value) = document |> yaml.get([node.Key("value")])
+///
+///   assert node.tag(value) == option.Some("!str")
+///
+///   let assert Ok(document) = yaml.resolve(document)
+///   let assert option.Some(value) = document |> yaml.get([node.Key("value")])
+///
+///   assert node.tag(value) == option.Some("tag:yaml.org,2002:str")
+/// }
+/// ```
 pub fn tag(node: Node) -> Option(String) {
   node.tag
 }
 
+/// Returns the YAML anchor name attached to a node, if one was written or added.
+///
+/// For source YAML like `defaults: &base { retries: 1 }`, the value node under
+/// `defaults` has anchor `base`. Resolving validates duplicate anchors but does
+/// not remove anchor metadata from nodes.
 pub fn anchor(node: Node) -> Option(String) {
   node.anchor
 }
 
+/// Returns the YAML alias name attached to a node, if one was written or added.
+///
+/// For source YAML like `copy: *base`, the value node under `copy` has alias
+/// `base`. Resolving checks that aliases refer to anchors seen earlier in the
+/// document, but alias metadata can still be inspected on the node.
 pub fn alias(node: Node) -> Option(String) {
   node.alias
 }
 
 /// Returns a copy of the node with tag metadata.
+///
+/// This function only sets metadata. It does not validate tag syntax or change
+/// the node's [`Kind`](#Kind).
 ///
 pub fn with_tag(node: Node, tag: String) -> Node {
   Node(..node, tag: Some(tag))
@@ -288,16 +352,25 @@ pub fn with_tag(node: Node, tag: String) -> Node {
 
 /// Returns a copy of the node with anchor metadata.
 ///
+/// This function only sets metadata. Use [`yum/yaml.resolve`](../yaml.html#resolve)
+/// to validate anchor and alias relationships.
+///
 pub fn with_anchor(node: Node, anchor: String) -> Node {
   Node(..node, anchor: Some(anchor))
 }
 
 /// Returns a copy of the node with alias metadata.
 ///
+/// This function only sets metadata. Use [`yum/yaml.resolve`](../yaml.html#resolve)
+/// to check whether the alias refers to a known anchor.
+///
 pub fn with_alias(node: Node, alias: String) -> Node {
   Node(..node, alias: Some(alias))
 }
 
+/// Returns mapping entries when the node is a mapping.
+///
+/// Returns [`ExpectedKind`](#AccessError) when the node is not a mapping.
 pub fn as_mapping(node: Node) -> Result(List(#(Node, Node)), AccessError) {
   case node.kind {
     Mapping(entries) -> Ok(entries)
@@ -305,6 +378,40 @@ pub fn as_mapping(node: Node) -> Result(List(#(Node, Node)), AccessError) {
   }
 }
 
+/// Returns all keys from a mapping node.
+///
+/// The keys are returned as nodes because YAML mappings can use scalar,
+/// sequence, or mapping nodes as keys. Returns [`ExpectedKind`](#AccessError)
+/// when the node is not a mapping.
+pub fn get_keys(node: Node) -> Result(List(Node), AccessError) {
+  node
+  |> as_mapping()
+  |> result.map(
+    list.map(_, fn(entry) {
+      let #(key, _) = entry
+      key
+    }),
+  )
+}
+
+/// Returns all values from a mapping node.
+///
+/// Values are returned in source order. Returns [`ExpectedKind`](#AccessError)
+/// when the node is not a mapping.
+pub fn get_values(node: Node) -> Result(List(Node), AccessError) {
+  node
+  |> as_mapping
+  |> result.map(fn(node) {
+    list.map(node, fn(entry) {
+      let #(_, value) = entry
+      value
+    })
+  })
+}
+
+/// Returns sequence entries when the node is a sequence.
+///
+/// Returns [`ExpectedKind`](#AccessError) when the node is not a sequence.
 pub fn as_sequence(node: Node) -> Result(List(Node), AccessError) {
   case node.kind {
     Sequence(entries) -> Ok(entries)
@@ -312,6 +419,9 @@ pub fn as_sequence(node: Node) -> Result(List(Node), AccessError) {
   }
 }
 
+/// Returns the string value when the node is a string.
+///
+/// Returns [`ExpectedKind`](#AccessError) when the node is not a string.
 pub fn as_string(node: Node) -> Result(String, AccessError) {
   case node.kind {
     String(value) -> Ok(value)
@@ -319,6 +429,9 @@ pub fn as_string(node: Node) -> Result(String, AccessError) {
   }
 }
 
+/// Returns the boolean value when the node is a boolean.
+///
+/// Returns [`ExpectedKind`](#AccessError) when the node is not a boolean.
 pub fn as_bool(node: Node) -> Result(Bool, AccessError) {
   case node.kind {
     Bool(value) -> Ok(value)
@@ -326,6 +439,9 @@ pub fn as_bool(node: Node) -> Result(Bool, AccessError) {
   }
 }
 
+/// Returns the integer value when the node is an integer.
+///
+/// Returns [`ExpectedKind`](#AccessError) when the node is not an integer.
 pub fn as_int(node: Node) -> Result(Int, AccessError) {
   case node.kind {
     Int(value) -> Ok(value)
@@ -333,6 +449,11 @@ pub fn as_int(node: Node) -> Result(Int, AccessError) {
   }
 }
 
+/// Returns the finite float value when the node is a float.
+///
+/// Returns [`ExpectedKind`](#AccessError) when the node is not a finite float.
+/// Special float values have separate kinds: [`PosInf`](#Kind),
+/// [`NegInf`](#Kind), and [`Nan`](#Kind).
 pub fn as_float(node: Node) -> Result(Float, AccessError) {
   case node.kind {
     Float(value) -> Ok(value)
@@ -340,6 +461,9 @@ pub fn as_float(node: Node) -> Result(Float, AccessError) {
   }
 }
 
+/// Returns `Nil` when the node is null.
+///
+/// Returns [`ExpectedKind`](#AccessError) when the node is not null.
 pub fn as_null(node: Node) -> Result(Nil, AccessError) {
   case node.kind {
     Null -> Ok(Nil)
@@ -347,6 +471,32 @@ pub fn as_null(node: Node) -> Result(Nil, AccessError) {
   }
 }
 
+/// Returns a nested node by following mapping keys and sequence indexes.
+///
+/// This is a convenience wrapper around [`get_key`](#get_key) and
+/// [`get_index`](#get_index). It returns `None` when any path segment does not
+/// match the current node.
+///
+/// ```gleam
+/// import gleam/option
+/// import yum/yaml
+/// import yum/yaml/node
+///
+/// pub fn example() {
+///   let assert Ok(document) = yaml.parse("jobs:\n  test:\n    run: gleam test")
+///   let root = yaml.root(document)
+///
+///   let run = root |> node.get([
+///     node.Key("jobs"),
+///     node.Key("test"),
+///     node.Key("run"),
+///   ])
+///
+///   let value = run |> option.map(node.as_string)
+///
+///   assert value == option.Some(Ok("gleam test"))
+/// }
+/// ```
 pub fn get(node: Node, path: List(PathSegment)) -> Option(Node) {
   case path {
     [] -> Some(node)
@@ -359,6 +509,10 @@ pub fn get(node: Node, path: List(PathSegment)) -> Option(Node) {
   }
 }
 
+/// Returns a mapping value by string key.
+///
+/// Only string keys are matched. Returns `None` when the node is not a mapping,
+/// when the key is not present, or when a mapping entry uses a non-string key.
 pub fn get_key(node: Node, key: String) -> Option(Node) {
   case as_mapping(node) {
     Ok(entries) ->
@@ -375,6 +529,10 @@ pub fn get_key(node: Node, key: String) -> Option(Node) {
   }
 }
 
+/// Returns a sequence item by zero-based index.
+///
+/// Returns `None` when the node is not a sequence or when the index is out of
+/// bounds. Negative indexes always return `None`.
 pub fn get_index(node: Node, index: Int) -> Option(Node) {
   case index < 0 {
     True -> None

@@ -1,11 +1,25 @@
-//// YAML parsing.
+//// Parse, resolve, query, decode, and emit YAML documents.
 ////
-//// This is the main public module for parsing YAML documents:
+//// This is the main public module. It parses strings into opaque YAML
+//// documents, resolves YAML-level metadata such as aliases and tags, retrieves
+//// nested nodes by path, decodes documents with `gleam/dynamic/decode`, and
+//// emits YAML strings from parsed or built documents.
 ////
 //// ```gleam
+//// import gleam/option
 //// import yum/yaml
+//// import yum/yaml/node
 ////
-//// yaml.parse("name: yum")
+//// pub fn example() {
+////   let assert Ok(document) = yaml.parse("name: yum")
+////
+////   let name =
+////     document
+////     |> yaml.get([node.Key("name")])
+////     |> option.map(node.as_string)
+////
+////   assert name == option.Some(Ok("yum"))
+//// }
 //// ```
 ////
 //// Use [`parse`](#parse) when you want a single YAML document value. Use
@@ -29,7 +43,7 @@ import yum/yaml/dynamic as yaml_dynamic
 import yum/yaml/emitter
 import yum/yaml/error.{type YamlError}
 import yum/yaml/lexer
-import yum/yaml/node.{type Node}
+import yum/yaml/node.{type AccessError, type Node, type PathSegment}
 import yum/yaml/parser
 import yum/yaml/resolver
 
@@ -144,10 +158,31 @@ pub fn diagnostics(from yaml: Yaml) -> List(Diagnostic) {
 
 /// Returns a nested node by mapping key or sequence index.
 ///
-pub fn get(from yaml: Yaml, at path: List(node.PathSegment)) -> Option(Node) {
+pub fn get(from yaml: Yaml, at path: List(PathSegment)) -> Option(Node) {
   yaml
   |> root()
   |> node.get(path)
+}
+
+/// Returns all keys from the root mapping.
+///
+/// The keys are returned as nodes because YAML mappings can use scalar,
+/// sequence, or mapping nodes as keys. Returns [`ExpectedKind`](./yaml/node.html#AccessError)
+/// when the document root is not a mapping.
+pub fn get_keys(from yaml: Yaml) -> Result(List(Node), AccessError) {
+  yaml
+  |> root()
+  |> node.get_keys()
+}
+
+/// Returns all values from the root mapping.
+///
+/// Values are returned in source order. Returns [`ExpectedKind`](./yaml/node.html#AccessError)
+/// when the document root is not a mapping.
+pub fn get_values(from yaml: Yaml) -> Result(List(Node), AccessError) {
+  yaml
+  |> root()
+  |> node.get_values()
 }
 
 fn resolve_internal(internal: YamlInternal) -> Result(Yaml, List(Diagnostic)) {
@@ -186,16 +221,12 @@ pub fn decode(
   |> result.map_error(UnableToDecode)
 }
 
-/// Emits a deterministic YAML string from a YAML document and validates it.
+/// Emits a deterministic YAML string from a YAML document.
 ///
-pub fn to_string(yaml: Yaml) -> Result(String, YamlError) {
-  let rendered =
-    yaml
-    |> root()
-    |> emitter.to_string()
-
-  use _ <- result.try(parse(rendered))
-  Ok(rendered)
+pub fn to_string(yaml: Yaml) -> String {
+  yaml
+  |> root()
+  |> emitter.to_string()
 }
 
 /// Normalizes whitespace in the YAML file.

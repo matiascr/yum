@@ -1,4 +1,30 @@
-//// Diagnostics for parsed YAML nodes.
+//// Typed diagnostics produced while resolving YAML.
+////
+//// Diagnostics describe semantic YAML issues such as duplicate mapping keys,
+//// unknown aliases, invalid directives, and invalid tags. Parse a document,
+//// resolve it with [`yum/yaml.resolve`](../yaml.html#resolve), then inspect the
+//// diagnostics kept on the resolved document.
+////
+//// ```gleam
+//// import gleam/list
+//// import yum/yaml
+//// import yum/yaml/diagnostic
+////
+//// pub fn example() {
+////   let assert Ok(document) = yaml.parse("
+//// name: one
+//// name: two
+//// ")
+////   let assert Ok(document) = yaml.resolve(document)
+////
+////   let messages =
+////     document
+////     |> yaml.diagnostics()
+////     |> list.map(diagnostic.message)
+////
+////   assert messages == ["Duplicate mapping key `name`"]
+//// }
+//// ```
 
 import gleam/dict.{type Dict}
 import gleam/float

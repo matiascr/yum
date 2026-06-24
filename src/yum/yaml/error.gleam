@@ -29,7 +29,7 @@ pub type YamlError {
   UnexpectedToken(token: Token, row: Int, col: Int)
 
   /// Any parser error that does not map cleanly to a more specific variant.
-  Other(nibble.Error(Token))
+  Other(nibble.Error(Token), row: Int, col: Int)
 }
 
 pub fn from_lex_error(error: lexer.Error) -> YamlError {
@@ -56,8 +56,10 @@ fn from_problem(problem: nibble.Error(Token), pos: lexer.Span) -> YamlError {
     // parser user state — see Issues. This branch should not be reached
     // through from_parse_errors in normal operation.
     nibble.Custom(..) -> UnexpectedEndOfInput
-    nibble.BadParser(..) -> Other(problem)
-    nibble.Expected(..) -> Other(problem)
+    nibble.BadParser(..) ->
+      Other(problem, row: pos.row_start, col: pos.col_start)
+    nibble.Expected(..) ->
+      Other(problem, row: pos.row_start, col: pos.col_start)
   }
 }
 
@@ -84,10 +86,9 @@ pub fn span(error: YamlError) -> Option(node.Span) {
 
     UnexpectedToken(row:, col:, ..) -> Some(point_span(row, col, width: 1))
 
-    IndentNormalizationError
-    | MultipleDocuments
-    | UnexpectedEndOfInput
-    | Other(..) -> None
+    IndentNormalizationError | MultipleDocuments | UnexpectedEndOfInput -> None
+
+    Other(row:, col:, ..) -> Some(point_span(row, col, width: 1))
   }
 }
 

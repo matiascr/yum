@@ -1,4 +1,5 @@
 import gleam/dynamic/decode
+import gleam/list
 import gleam/option
 import gleam/result
 import yaml_helpers as helpers
@@ -32,6 +33,15 @@ pub fn get_retrieves_nested_mapping_values_test() {
   let assert option.Some(command) = node.get(script, [node.Index(0)])
 
   assert node.as_string(command) == Ok("gleam")
+}
+
+pub fn get_keys_and_values_return_mapping_parts_test() {
+  let assert Ok(document) = helpers.parse_node("name: yum\nlanguage: gleam\n")
+  let assert Ok(keys) = node.get_keys(document)
+  let assert Ok(values) = node.get_values(document)
+
+  assert list.map(keys, node.as_string) == [Ok("name"), Ok("language")]
+  assert list.map(values, node.as_string) == [Ok("yum"), Ok("gleam")]
 }
 
 pub fn node_tracks_flow_collection_style_and_span_test() {
@@ -80,7 +90,7 @@ pub fn builder_and_emitter_round_trip_test() {
     |> yaml.from_node()
     |> yaml.to_string()
 
-  assert rendered == Ok("name: yum\ncommands:\n  - gleam\n  - test")
+  assert rendered == "name: yum\ncommands:\n  - gleam\n  - test"
 }
 
 pub fn to_string_validates_emitted_yaml_test() {
@@ -89,7 +99,7 @@ pub fn to_string_validates_emitted_yaml_test() {
       #(builder.string("name"), builder.string("yum")),
     ])
 
-  let assert Ok(rendered) =
+  let rendered =
     document
     |> yaml.from_node()
     |> yaml.to_string()

@@ -158,8 +158,11 @@ pub fn builder_output_can_be_emitted_and_parsed_again_test() {
     ])
     |> yaml.from_node()
 
-  let assert Ok(rendered) = yaml.to_string(document)
-  let assert Ok(parsed) = yaml.parse(rendered)
+  let assert Ok(parsed) =
+    document
+    |> yaml.to_string()
+    |> yaml.parse()
+
   let assert option.Some(run) =
     parsed
     |> yaml.get([node.Key("jobs"), node.Index(0), node.Key("run")])

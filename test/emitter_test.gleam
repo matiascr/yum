@@ -18,7 +18,7 @@ pub fn emitter_quotes_strings_that_would_parse_as_other_scalars_test() {
       string("~"),
     ])
 
-  let assert Ok(rendered) =
+  let rendered =
     document
     |> yaml.from_node()
     |> yaml.to_string()
@@ -53,7 +53,6 @@ pub fn emitter_quotes_strings_with_mapping_indicators_test() {
     |> yaml.from_node()
     |> yaml.to_string()
     == "colon: \"a: b\"\nhash: \"a # b\"\n\"key:with:colon\": value"
-    |> Ok
 }
 
 pub fn emitter_quotes_empty_and_whitespace_sensitive_strings_test() {
@@ -69,7 +68,6 @@ pub fn emitter_quotes_empty_and_whitespace_sensitive_strings_test() {
     |> yaml.from_node()
     |> yaml.to_string()
     == "- \"\"\n- \" leading\"\n- \"trailing \"\n- \" \""
-    |> Ok
 }
 
 pub fn emitter_handles_nested_block_collections_test() {
@@ -96,7 +94,6 @@ pub fn emitter_handles_nested_block_collections_test() {
     |> yaml.from_node()
     |> yaml.to_string()
     == "jobs:\n  - name: test\n    steps:\n      - gleam test\n      - gleam format"
-    |> Ok
 }
 
 pub fn emitter_emits_non_string_scalar_keys_test() {
@@ -107,7 +104,7 @@ pub fn emitter_emits_non_string_scalar_keys_test() {
       #(null(), string("empty")),
     ])
 
-  let assert Ok(rendered) =
+  let rendered =
     document
     |> yaml.from_node()
     |> yaml.to_string()
