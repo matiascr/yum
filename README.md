@@ -70,7 +70,7 @@ pub fn build_document() {
   ])
   |> yaml.from_node()
   |> yaml.to_string()
-  // -> Ok("name: yum")
+  // -> "name: yum"
 }
 ```
 
@@ -96,10 +96,32 @@ pub fn diagnostics() {
 
 Further documentation can be found at <https://hexdocs.pm/yum>.
 
+## Public API
+
+The stable 1.0 API is intentionally small:
+
+- [`yum/yaml`](https://hexdocs.pm/yum/yum/yaml.html) parses, resolves, queries,
+  decodes, and emits YAML documents.
+- [`yum/yaml/node`](https://hexdocs.pm/yum/yum/yaml/node.html) inspects YAML
+  nodes, including kind, span, style, tags, anchors, aliases, paths, mapping
+  keys, and mapping values.
+- [`yum/yaml/builder`](https://hexdocs.pm/yum/yum/yaml/builder.html) builds
+  synthetic YAML node trees in Gleam code.
+- [`yum/yaml/diagnostic`](https://hexdocs.pm/yum/yum/yaml/diagnostic.html)
+  exposes typed resolver diagnostics.
+- [`yum/yaml/error`](https://hexdocs.pm/yum/yum/yaml/error.html) exposes parse
+  errors, messages, and source spans.
+
+Lexer, parser, resolver, emitter, token, dynamic, and document internals are not
+part of the public API.
+
 ## YAML support
 
-`yum` targets YAML 1.2-style configuration files with a tooling-oriented API.
-It currently supports:
+`yum` targets YAML 1.2-style configuration files with a tooling-oriented API. It
+is suitable for parsing and inspecting common configuration files such as GitHub
+Actions workflows, package metadata, and Kubernetes-style manifests.
+
+The 1.0 support surface includes:
 
 - block and flow sequences and mappings
 - plain, single-quoted, double-quoted, literal block, and folded block scalars
@@ -107,8 +129,12 @@ It currently supports:
 - comments in parsed input
 - anchors, aliases, local tags, verbatim tags, and `%TAG` directives
 - merge keys (`<<`) as a pragmatic compatibility feature
-- spans, styles, typed diagnostics, decoding, building, and deterministic
-  emission
+- source spans and source styles
+- typed parse errors and typed resolver diagnostics
+- lookup by mapping key or sequence index
+- mapping key/value extraction
+- decoding through `gleam/dynamic/decode`
+- builder functions and deterministic emission
 
 The semantic resolver is intentionally separate from syntax parsing:
 
@@ -119,14 +145,20 @@ input
 // -> Ok(Yaml(...))
 ```
 
-Known limitations before a full compliance claim:
+Current limits:
 
-- Tags are expanded, but not every YAML tag URI edge case is validated.
+- `yum` does not claim full YAML Test Suite compliance yet.
 - Comments are accepted in input, but not preserved for round-trip editing.
-- `yum` does not yet expose selectable schemas such as failsafe, JSON, or core.
+- Tags are expanded and exposed, but tags do not currently force scalar casts.
+- Selectable schemas such as failsafe, JSON, and core are not exposed yet.
+- The emitter is deterministic, but it is not a formatter and does not preserve
+  the original source layout.
 
 ## Development
 
 ```sh
-gleam test  # Run the tests
+gleam test --target erlang
+gleam test --target javascript
+gleam format --check src test
+gleam docs build
 ```

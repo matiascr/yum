@@ -118,8 +118,9 @@ pub fn directives_require_explicit_document_start_test() {
 }
 
 pub fn single_document_api_rejects_multiple_documents_test() {
-  assert helpers.parse_ast("---\none\n---\ntwo")
-    == Error(error.MultipleDocuments)
+  let assert Error(parse_error) = helpers.parse_ast("---\none\n---\ntwo")
+
+  assert error.message(parse_error) == "Expected a single YAML document"
 }
 
 pub fn stream_rejects_unmarked_second_document_test() {

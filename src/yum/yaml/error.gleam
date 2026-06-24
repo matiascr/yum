@@ -1,7 +1,8 @@
 //// Errors returned by YAML parsing.
 ////
-//// Import this module when you need to pattern match on parsing failures from
-//// [`yum/yaml.parse`](../yaml.html#parse).
+//// Parse errors are opaque. Use [`message`](#message) for a human-readable
+//// description and [`span`](#span) for the primary source location when one is
+//// available.
 ////
 
 import gleam/option.{type Option, None, Some}
@@ -12,31 +13,27 @@ import yum/yaml/lexer/context.{type Context}
 import yum/yaml/node
 import yum/yaml/token.{type Token}
 
-pub type YamlError {
-  /// Input indentation could not be normalized before lexing.
+pub opaque type YamlError {
   IndentNormalizationError
 
-  /// The lexer could not match the input at the given row and column.
   LexerError(row: Int, col: Int, lexeme: String)
 
-  /// A single-document API was given a stream with more than one document.
   MultipleDocuments
 
-  /// The parser reached the end of input before a complete document was found.
   UnexpectedEndOfInput
 
-  /// The parser found a token that was not valid in the current position.
   UnexpectedToken(token: Token, row: Int, col: Int)
 
-  /// Any parser error that does not map cleanly to a more specific variant.
   Other(nibble.Error(Token), row: Int, col: Int)
 }
 
+@internal
 pub fn from_lex_error(error: lexer.Error) -> YamlError {
   let lexer.NoMatchFound(row:, col:, lexeme:) = error
   LexerError(row:, col:, lexeme:)
 }
 
+@internal
 pub fn from_parse_errors(
   errors: List(nibble.DeadEnd(Token, Context)),
 ) -> YamlError {
@@ -61,6 +58,21 @@ fn from_problem(problem: nibble.Error(Token), pos: lexer.Span) -> YamlError {
     nibble.Expected(..) ->
       Other(problem, row: pos.row_start, col: pos.col_start)
   }
+}
+
+@internal
+pub fn multiple_documents() -> YamlError {
+  MultipleDocuments
+}
+
+@internal
+pub fn unexpected_end_of_input() -> YamlError {
+  UnexpectedEndOfInput
+}
+
+@internal
+pub fn indent_normalization_error() -> YamlError {
+  IndentNormalizationError
 }
 
 /// Renders a human-readable parse error message.

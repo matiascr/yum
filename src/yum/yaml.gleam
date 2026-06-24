@@ -91,8 +91,8 @@ pub fn parse(input: String) -> Result(Yaml, YamlError) {
 
   case documents {
     [document] -> Ok(document)
-    [_, _, ..] -> Error(error.MultipleDocuments)
-    [] -> Error(error.UnexpectedEndOfInput)
+    [_, _, ..] -> Error(error.multiple_documents())
+    [] -> Error(error.unexpected_end_of_input())
   }
 }
 
@@ -263,7 +263,7 @@ fn find_min_indent(lines: List(String)) -> Result(Int, YamlError) {
   |> list.map(count_indents)
   |> list.map(int.negate)
   |> list.max(int.compare)
-  |> result.replace_error(error.IndentNormalizationError)
+  |> result.replace_error(error.indent_normalization_error())
 }
 
 fn count_indents(input: String) -> Int {

@@ -23,8 +23,8 @@ pub fn parse(tokens: List(lexer.Token(Token))) -> Result(Node, YamlError) {
 
   case documents {
     [document] -> Ok(document)
-    [_, _, ..] -> Error(error.MultipleDocuments)
-    [] -> Error(error.UnexpectedEndOfInput)
+    [_, _, ..] -> Error(error.multiple_documents())
+    [] -> Error(error.unexpected_end_of_input())
   }
 }
 
@@ -35,8 +35,8 @@ pub fn parse_document(
 
   case documents {
     [document] -> Ok(document)
-    [_, _, ..] -> Error(error.MultipleDocuments)
-    [] -> Error(error.UnexpectedEndOfInput)
+    [_, _, ..] -> Error(error.multiple_documents())
+    [] -> Error(error.unexpected_end_of_input())
   }
 }
 
