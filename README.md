@@ -4,11 +4,19 @@
 gleam add yum@1
 ```
 ```gleam
+import gleam/option
 import yum/yaml
+import yum/yaml/node
 
-pub fn parse_yaml(input: String) {
-  yaml.parse(input)
-  // -> Ok(Yaml(...))
+pub fn parse_yaml() {
+  let assert Ok(document) = yaml.parse("name: yum")
+
+  let name =
+    document
+    |> yaml.get([node.Key("name")])
+    |> option.map(node.as_string)
+
+  assert name == option.Some(Ok("yum"))
 }
 ```
 
@@ -16,7 +24,7 @@ pub fn parse_yaml(input: String) {
 pipe it through `yaml.resolve` to run semantic YAML checks:
 
 ```gleam
-import gleam/option.{type Option, None}
+import gleam/option.{type Option, None, Some}
 import yum/yaml
 import yum/yaml/node.{type Node}
 
@@ -25,15 +33,18 @@ pub fn image(input: String) -> Option(Node) {
     Ok(document) -> document |> yaml.get([node.Key("image")])
     Error(_) -> None
   }
-  // -> Some(Node(...))
+}
+
+pub fn image_example() {
+  let assert Some(image) = image("image: gleam:latest")
+
+  assert node.as_string(image) == Ok("gleam:latest")
 }
 
 pub fn check(input: String) {
   let assert Ok(document) = yaml.parse(input)
 
-  document
-  |> yaml.resolve()
-  // -> Ok(Yaml(...))
+  let assert Ok(_) = document |> yaml.resolve()
 }
 ```
 
@@ -53,17 +64,18 @@ pub fn decode_name() {
     decode.success(name)
   }
 
-  yaml.decode(input, using: decoder)
-  // -> Ok("yum")
+  assert yaml.decode(input, using: decoder) == Ok("yum")
 }
 
 pub fn build_document() {
-  builder.mapping([
-    #(builder.string("name"), builder.string("yum")),
-  ])
-  |> yaml.from_node()
-  |> yaml.to_string()
-  // -> "name: yum"
+  let output =
+    builder.mapping([
+      #(builder.string("name"), builder.string("yum")),
+    ])
+    |> yaml.from_node()
+    |> yaml.to_string()
+
+  assert output == "name: yum"
 }
 ```
 
@@ -71,7 +83,9 @@ The resolver keeps non-fatal warnings such as duplicate mapping keys as typed
 diagnostics:
 
 ```gleam
+import gleam/list
 import yum/yaml
+import yum/yaml/diagnostic
 
 const input = "
 name: yum
@@ -82,8 +96,12 @@ pub fn diagnostics() {
   let assert Ok(document) = yaml.parse(input)
   let assert Ok(document) = yaml.resolve(document)
 
-  yaml.diagnostics(document)
-  // -> [DuplicateMappingKey(...)]
+  let messages =
+    document
+    |> yaml.diagnostics()
+    |> list.map(diagnostic.message)
+
+  assert messages == ["Duplicate mapping key `name`"]
 }
 ```
 
@@ -127,10 +145,10 @@ The 1.0 support surface includes:
 The semantic resolver is intentionally separate from syntax parsing:
 
 ```gleam
-input
-|> yaml.parse()
-|> result.then(yaml.resolve)
-// -> Ok(Yaml(...))
+let assert Ok(_) =
+  input
+  |> yaml.parse()
+  |> result.then(yaml.resolve)
 ```
 
 Current limits:
