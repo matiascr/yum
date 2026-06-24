@@ -1,8 +1,13 @@
 # yum
 
+## Installation
+
 ```sh
 gleam add yum@1
 ```
+
+## Usage
+
 ```gleam
 import gleam/option
 import yum/yaml
@@ -25,6 +30,7 @@ pipe it through `yaml.resolve` to run semantic YAML checks:
 
 ```gleam
 import gleam/option.{type Option, None, Some}
+import gleam/result
 import yum/yaml
 import yum/yaml/node.{type Node}
 
@@ -42,9 +48,9 @@ pub fn image_example() {
 }
 
 pub fn check(input: String) {
-  let assert Ok(document) = yaml.parse(input)
-
-  let assert Ok(_) = document |> yaml.resolve()
+  input
+  |> yaml.parse()
+  |> result.then(yaml.resolve)
 }
 ```
 
@@ -79,7 +85,7 @@ pub fn build_document() {
 }
 ```
 
-The resolver keeps non-fatal warnings such as duplicate mapping keys as typed
+The resolver keeps non-fatal warnings such as duplicate mapping keys as easy to check, typed
 diagnostics:
 
 ```gleam
@@ -105,42 +111,26 @@ pub fn diagnostics() {
 }
 ```
 
-Further documentation can be found on HexDocs after publishing.
-
-## Public API
-
-The stable 1.0 API is intentionally small:
-
-- `yum/yaml` parses, resolves, queries, decodes, and emits YAML documents.
-- `yum/yaml/node` inspects YAML nodes, including kind, span, style, tags,
-  anchors, aliases, paths, mapping keys, and mapping values.
-- `yum/yaml/builder` builds synthetic YAML node trees in Gleam code.
-- `yum/yaml/diagnostic` exposes typed resolver diagnostics.
-- `yum/yaml/error` exposes parse errors, messages, and source spans.
-
-Lexer, parser, resolver, emitter, token, dynamic, and document internals are not
-part of the public API.
-
 ## YAML support
 
-`yum` targets YAML 1.2-style configuration files with a tooling-oriented API. It
+`yum` targets YAML 1.2 files with a tooling-oriented API. It
 is suitable for parsing and inspecting common configuration files such as GitHub
 Actions workflows, package metadata, and Kubernetes-style manifests.
 
 The 1.0 support surface includes:
 
-- block and flow sequences and mappings
-- plain, single-quoted, double-quoted, literal block, and folded block scalars
-- document streams with `---` and `...` markers
-- comments in parsed input
-- anchors, aliases, local tags, verbatim tags, and `%TAG` directives
-- merge keys (`<<`) as a pragmatic compatibility feature
-- source spans and source styles
-- typed parse errors and typed resolver diagnostics
-- lookup by mapping key or sequence index
-- mapping key/value extraction
-- decoding through `gleam/dynamic/decode`
-- builder functions and deterministic emission
+- Block and flow sequences and mappings
+- Plain, single-quoted, double-quoted, literal block, and folded block scalars
+- Document streams with `---` and `...` markers
+- Comments in parsed input
+- Anchors, aliases, local tags, verbatim tags, and `%TAG` directives
+- Merge keys (`<<`)
+- Source spans and source styles
+- Typed parse errors and typed resolver diagnostics
+- Lookup by mapping key or sequence index
+- Mapping key/value extraction
+- Decoding through `gleam/dynamic/decode`
+- Builder functions and deterministic emission
 
 The semantic resolver is intentionally separate from syntax parsing:
 
@@ -165,6 +155,6 @@ Current limits:
 ```sh
 gleam test --target erlang
 gleam test --target javascript
-gleam format --check src test
+gleam format --check
 gleam docs build
 ```
