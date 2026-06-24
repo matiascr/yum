@@ -1,6 +1,6 @@
 name = "yum"
 version = "1.0.0"
-description = "A YAML parser, resolver, decoder bridge, and emitter for Gleam."
+description = "Tooling-grade YAML parsing, diagnostics, decoding, and emitting for Gleam."
 licences = ["Apache-2.0"]
 repository = { type = "github", user = "matiascr", repo = "yum" }
 links = [
