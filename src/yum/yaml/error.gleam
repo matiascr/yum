@@ -13,6 +13,9 @@ import yum/yaml/lexer/context.{type Context}
 import yum/yaml/node
 import yum/yaml/token.{type Token}
 
+/// An opaque parse error.
+///
+/// Use [`message`](#message) and [`span`](#span) to inspect it.
 pub opaque type YamlError {
   IndentNormalizationError
 

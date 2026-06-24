@@ -33,6 +33,8 @@ import gleam/list
 import gleam/option.{type Option, None, Some}
 import yum/yaml/node.{type Node, type Span}
 
+/// How serious a diagnostic is.
+///
 pub type Severity {
   /// A non-fatal diagnostic.
   ///
@@ -45,6 +47,8 @@ pub type Severity {
   DiagnosticError
 }
 
+/// A secondary source location related to a diagnostic.
+///
 pub type Related {
   /// The first occurrence of a duplicate mapping key.
   FirstMappingKey(span: Span)
@@ -56,6 +60,8 @@ pub type Related {
   FirstYamlDirective(span: Span)
 }
 
+/// A typed semantic issue found while resolving YAML.
+///
 pub type Diagnostic {
   /// A mapping contains the same scalar key more than once.
   ///

@@ -20,6 +20,11 @@ import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
 
+/// A YAML value with source metadata.
+///
+/// Nodes can represent scalars, sequences, and mappings. Parsed nodes carry
+/// their source span and presentation style. Builder-created nodes are
+/// synthetic and use [`Synthetic`](#Style) style plus [`synthetic_span`](#synthetic_span).
 pub opaque type Node {
   Node(
     kind: Kind,
@@ -229,6 +234,8 @@ pub type Position {
   Position(row: Int, column: Int)
 }
 
+/// One step in a nested YAML lookup path.
+///
 pub type PathSegment {
   /// Selects a value from a mapping by string key.
   ///
@@ -252,6 +259,9 @@ pub fn new(kind: Kind, span span: Span, style style: Style) -> Node {
   Node(kind:, span:, style:, tag: None, anchor: None, alias: None)
 }
 
+/// Creates a generated node with no original source location.
+///
+/// This is the lower-level constructor used by [`yum/yaml/builder`](./builder.html).
 pub fn synthetic(kind: Kind) -> Node {
   new(kind, span: synthetic_span(), style: Synthetic)
 }

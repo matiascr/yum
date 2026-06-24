@@ -47,6 +47,10 @@ import yum/yaml/node.{type AccessError, type Node, type PathSegment}
 import yum/yaml/parser
 import yum/yaml/resolver
 
+/// Errors returned by [`decode`](#decode).
+///
+/// Decoding runs three phases: parsing, YAML resolution, and then the supplied
+/// `gleam/dynamic/decode` decoder. This type identifies which phase failed.
 pub type DecodeError {
   /// The input could not be parsed as YAML.
   ParseError(YamlError)
